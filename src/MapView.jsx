@@ -203,6 +203,21 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
       zoomControl: false, attributionControl: false,
       maxZoom: 18, minZoom: 5,
     })
+
+    // Try to center on user's location (Portugal bounds only)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude: lat, longitude: lng } = pos.coords
+          // Only zoom to location if it's within Portugal's approximate bounds
+          if (lat > 36.5 && lat < 42.2 && lng > -9.6 && lng < -6.1) {
+            map.setView([lat, lng], 10)
+          }
+        },
+        () => {}, // silently ignore permission denied
+        { timeout: 5000 }
+      )
+    }
     L.control.zoom({ position: 'topright' }).addTo(map)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', maxZoom: 19
