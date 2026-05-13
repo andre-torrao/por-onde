@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { X, Shield, Trash2, Check, RefreshCw, Eye, EyeOff, Copy, Mail, Image, MessageSquare, Users, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAuth } from './auth'
 import { getAllPendingSuggestions, setSuggestionStatus } from './storage'
@@ -37,7 +37,7 @@ function UsersTab() {
   const [search,  setSearch]  = useState('')
   const [filter,  setFilter]  = useState('all')
 
-  function refresh() { setUsers(getAllUsers()) }
+  function refresh() { getAllUsers().then(setUsers) }
 
   function copy(text, key) {
     copyToClipboard(text); setCopied(key); setTimeout(() => setCopied(null), 1500)
@@ -126,7 +126,7 @@ function UsersTab() {
 
           {/* Actions */}
           <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-            <button onClick={() => { setUserApproved(u.id, !u.approved); refresh() }} style={{ padding:'6px 12px', borderRadius:7, border:'1px solid', borderColor: u.approved?'var(--border)':'rgba(46,125,82,.4)', background: u.approved?'var(--surface)':'#e8f5ee', color: u.approved?'var(--muted)':'#2e7d52', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Open Sans,sans-serif' }}>
+            <button onClick={() => { setUserApproved(u.supabaseId, !u.approved).then(refresh) }} style={{ padding:'6px 12px', borderRadius:7, border:'1px solid', borderColor: u.approved?'var(--border)':'rgba(46,125,82,.4)', background: u.approved?'var(--surface)':'#e8f5ee', color: u.approved?'var(--muted)':'#2e7d52', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Open Sans,sans-serif' }}>
               {u.approved ? 'Revogar' : '✓ Aprovar'}
             </button>
             <button onClick={() => copy(emailText('approve',u), `em-ap-${u.id}`)} style={{ padding:'6px 12px', borderRadius:7, border:'1px solid var(--border)', background:'var(--surface)', color:'var(--muted)', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Open Sans,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
@@ -136,8 +136,8 @@ function UsersTab() {
               {copied===`em-pw-${u.id}` ? <Check size={10}/> : <Mail size={10}/>} Email password
             </button>
             {confirm===u.id
-              ? <button onClick={() => { deleteUser(u.id); setConfirm(null); refresh() }} style={{ padding:'6px 12px', borderRadius:7, border:'1px solid #f5c6c6', background:'#fdecea', color:'#c62828', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Open Sans,sans-serif' }}>Confirmar</button>
-              : <button onClick={() => setConfirm(u.supabaseId || u.id)} style={{ padding:'6px 12px', borderRadius:7, border:'1px solid var(--border)', background:'var(--surface)', color:'var(--muted)', fontSize:11, cursor:'pointer', fontFamily:'Open Sans,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
+              ? <button onClick={() => { deleteUser(u.supabaseId).then(() => { setConfirm(null); refresh() }) }} style={{ padding:'6px 12px', borderRadius:7, border:'1px solid #f5c6c6', background:'#fdecea', color:'#c62828', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'Open Sans,sans-serif' }}>Confirmar</button>
+              : <button onClick={() => setConfirm(u.supabaseId)} style={{ padding:'6px 12px', borderRadius:7, border:'1px solid var(--border)', background:'var(--surface)', color:'var(--muted)', fontSize:11, cursor:'pointer', fontFamily:'Open Sans,sans-serif', display:'flex', alignItems:'center', gap:4 }}>
                   <Trash2 size={10}/> Eliminar
                 </button>
             }
@@ -236,12 +236,16 @@ function InfoTab() {
 export default function AdminPage({ onClose }) {
   const { getAllUsers } = useAuth()
   const [tab, setTab] = useState('users')
+  const [allUsers, setAllUsers] = useState([])
+  const [pendingCount, setPendingCount] = useState(0)
 
-  const allUsers   = getAllUsers()
+  useEffect(() => {
+    getAllUsers().then(setAllUsers)
+    getAllPendingSuggestions().then(s => setPendingCount(s.length))
+  }, [])
+
   const pendingUsers = allUsers.filter(u => !u.approved).length
-  const pendingSugg  = getAllPendingSuggestions().length
-  const pendingPhotos = getAllPendingPhotos().length
-  const totalPending = pendingSugg + pendingPhotos
+  const totalPending = pendingCount
 
   return (
     <div style={{ position:'fixed', inset:0, zIndex:4000, background:'rgba(28,26,22,.5)', backdropFilter:'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}

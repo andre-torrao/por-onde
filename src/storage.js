@@ -1,81 +1,87 @@
-export const SUGGEST_STORE = 'pt_tracker_suggestions_v1'
+import { supabase } from './supabase'
 
-const readStore  = key => { try { return JSON.parse(localStorage.getItem(key) || '{}') } catch { return {} } }
-const writeStore = (key, data) => { try { localStorage.setItem(key, JSON.stringify(data)) } catch(e) {} }
-
-export function getSuggestions(locationId) {
-  const all = readStore(SUGGEST_STORE)
-  return Promise.resolve((all[locationId] || []).filter(s => s.status === 'approved'))
+export async function getSuggestions(locationId) {
+  const { data } = await supabase
+    .from('suggestions')
+    .select('*')
+    .eq('location_id', locationId)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+  return (data || []).map(normalise)
 }
 
-export function saveSuggestions(locationKey, list) {
-  const all = readStore(SUGGEST_STORE)
-  all[locationKey] = list
-  writeStore(SUGGEST_STORE, all)
+export async function getAllPendingSuggestions() {
+  const { data } = await supabase
+    .from('suggestions')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+  return (data || []).map(s => ({
+    ...normalise(s),
+    location: s.location_id,
+    displayLocation: s.location_name,
+  }))
 }
 
-export function getAllPendingSuggestions() {
-  const all = readStore(SUGGEST_STORE)
-  const pending = []
-  Object.entries(all).forEach(([key, suggs]) => {
-    suggs.forEach(s => {
-      if (s.status === 'pending') pending.push({
-        ...s, location: key,
-        displayLocation: s.locationName || key,
-      })
-    })
-  })
-  return Promise.resolve(pending.sort((a, b) => (b.createdAt||0) - (a.createdAt||0)))
-}
-
-export function getSuggestionsForUser(userId) {
-  const all = readStore(SUGGEST_STORE)
-  const result = []
-  Object.entries(all).forEach(([key, suggs]) => {
-    suggs.forEach(s => {
-      if (s.author === userId) result.push({
-        ...s, location: key,
-        displayLocation: s.locationName || key,
-      })
-    })
-  })
-  return Promise.resolve(result.sort((a, b) => (b.createdAt||0) - (a.createdAt||0)))
+export async function getSuggestionsForUser(username) {
+  const { data } = await supabase
+    .from('suggestions')
+    .select('*')
+    .eq('author_username', username)
+    .order('created_at', { ascending: false })
+  return (data || []).map(s => ({
+    ...normalise(s),
+    location: s.location_id,
+    displayLocation: s.location_name,
+  }))
 }
 
 export async function setSuggestionStatus(id, status) {
-  const all = readStore(SUGGEST_STORE)
-  Object.keys(all).forEach(loc => {
-    all[loc] = all[loc].map(s => s.id === id ? { ...s, status } : s)
-  })
-  writeStore(SUGGEST_STORE, all)
+  await supabase.from('suggestions').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
 }
 
 export async function deleteSuggestion(id) {
-  const all = readStore(SUGGEST_STORE)
-  Object.keys(all).forEach(loc => {
-    all[loc] = all[loc].filter(s => s.id !== id)
-  })
-  writeStore(SUGGEST_STORE, all)
+  await supabase.from('suggestions').delete().eq('id', id)
 }
 
 export async function addSuggestion({ locationId, locationName, category, text, date, photo, authorId, authorUsername }) {
-  const all = readStore(SUGGEST_STORE)
-  if (!all[locationId]) all[locationId] = []
-  all[locationId].unshift({
-    id: Date.now().toString(),
-    category, text,
-    date_info: date, date,
-    photo_url: null, photo: photo || null,
-    author: authorUsername || authorId,
-    author_id: authorId,
-    locationName,
-    createdAt: Date.now(),
-    status: 'pending',
+  const { error } = await supabase.from('suggestions').insert({
+    location_id:     locationId,
+    location_name:   locationName,
+    category,
+    text,
+    date_info:       date || null,
+    photo_url:       photo || null,   // base64 stored directly for now
+    author_id:       authorId || null,
+    author_username: authorUsername || null,
+    status:          'pending',
   })
-  writeStore(SUGGEST_STORE, all)
-  return true
+  return !error
 }
 
+export async function saveSuggestions() {
+  // no-op: kept for API compatibility (old localStorage version)
+}
+
+// Normalise DB row to the shape the UI expects
+function normalise(s) {
+  return {
+    id:           s.id,
+    category:     s.category,
+    text:         s.text,
+    date:         s.date_info || null,
+    date_info:    s.date_info || null,
+    photo:        s.photo_url || null,
+    photo_url:    s.photo_url || null,
+    author:       s.author_username || '',
+    author_id:    s.author_id || null,
+    locationName: s.location_name,
+    createdAt:    new Date(s.created_at).getTime(),
+    status:       s.status,
+  }
+}
+
+// Image compression helper — unchanged
 export function compressImage(file, maxW = 700) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()

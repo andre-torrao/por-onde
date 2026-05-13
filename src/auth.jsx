@@ -1,123 +1,127 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { supabase } from './supabase'
 
 const Ctx = createContext(null)
-const STORE      = 'pt_tracker_v1_users'
-const SESH       = 'pt_tracker_v1_session'
-const ADMIN_USER = 'admin'
-const ADMIN_PASS = 'admin1234'
-
-const readDB  = () => { try { return JSON.parse(localStorage.getItem(STORE) || '{}') } catch { return {} } }
-const writeDB = db => localStorage.setItem(STORE, JSON.stringify(db))
-
-function ensureAdmin() {
-  const db = readDB()
-  if (!db[ADMIN_USER]) {
-    db[ADMIN_USER] = {
-      pw: ADMIN_PASS, photo: null, country: 'Portugal',
-      visited_municipalities: [], visited_parishes: [],
-      joinedAt: Date.now(), approved: true, isAdmin: true
-    }
-  } else {
-    db[ADMIN_USER].approved = true
-    db[ADMIN_USER].isAdmin  = true
-    db[ADMIN_USER].pw       = ADMIN_PASS
-  }
-  Object.values(db).forEach(u => {
-    if (!u.visited_municipalities) u.visited_municipalities = u.visited || []
-    if (!u.visited_parishes)       u.visited_parishes = []
-  })
-  writeDB(db)
-}
 
 export function AuthProvider({ children }) {
   const [user,  setUser]  = useState(null)
   const [ready, setReady] = useState(false)
 
+  async function loadProfile(supabaseUser) {
+    if (!supabaseUser) { setUser(null); return }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single()
+    if (!profile || !profile.approved) { setUser(null); return }
+    setUser({
+      id:                     profile.username,
+      supabaseId:             supabaseUser.id,
+      photo:                  profile.photo_url || null,
+      country:                profile.country || 'Portugal',
+      isAdmin:                profile.is_admin || false,
+      approved:               profile.approved || false,
+      joinedAt:               new Date(profile.joined_at).getTime(),
+      visited_municipalities: profile.visited_municipalities || [],
+      visited_parishes:       profile.visited_parishes || [],
+    })
+  }
+
   useEffect(() => {
-    ensureAdmin()
-    const id = localStorage.getItem(SESH)
-    if (id) {
-      const db = readDB()
-      if (db[id] && db[id].approved) setUser({ id, ...db[id] })
-      else localStorage.removeItem(SESH)
-    }
-    setReady(true)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      loadProfile(session?.user ?? null).finally(() => setReady(true))
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadProfile(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = useCallback((id, password) => {
-    ensureAdmin()
-    const db  = readDB()
-    const key = id.trim().toLowerCase()
-    if (!db[key])                return { err: `Utilizador "${key}" não encontrado.` }
-    if (db[key].pw !== password) return { err: 'Palavra-passe incorreta.' }
-    if (!db[key].approved)       return { err: 'A tua conta está a aguardar aprovação.' }
-    localStorage.setItem(SESH, key)
-    setUser({ id: key, ...db[key] })
+  const login = useCallback(async (username, password) => {
+    const email = `${username.trim().toLowerCase()}@poronde.app`
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      if (error.message.includes('Invalid login')) return { err: 'Utilizador ou palavra-passe incorretos.' }
+      return { err: error.message }
+    }
+    const { data: { user: sbUser } } = await supabase.auth.getUser()
+    if (sbUser) {
+      const { data: profile } = await supabase.from('profiles').select('approved').eq('id', sbUser.id).single()
+      if (!profile?.approved) {
+        await supabase.auth.signOut()
+        return { err: 'A tua conta está a aguardar aprovação.' }
+      }
+    }
     return { ok: true }
   }, [])
 
-  const register = useCallback((id, password, photo, country) => {
-    const key = id.trim().toLowerCase()
+  const register = useCallback(async (username, password, photo, country) => {
+    const key = username.trim().toLowerCase()
     if (key.length < 2)      return { err: 'Nome demasiado curto (mín. 2 caracteres).' }
     if (password.length < 4) return { err: 'Palavra-passe demasiado curta (mín. 4 caracteres).' }
-    const db = readDB()
-    if (db[key]) return { err: 'Este utilizador já existe.' }
-    db[key] = {
-      pw: password, photo: photo || null, country: country || 'Portugal',
-      visited_municipalities: [], visited_parishes: [],
-      joinedAt: Date.now(), approved: false, isAdmin: false
+    const email = `${key}@poronde.app`
+    const { error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { username: key, country: country || 'Portugal' } }
+    })
+    if (error) {
+      if (error.message.includes('already registered')) return { err: 'Este utilizador já existe.' }
+      return { err: error.message }
     }
-    writeDB(db)
+    await supabase.auth.signOut()
     return { pending: true }
   }, [])
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(SESH); setUser(null)
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut()
+    setUser(null)
   }, [])
 
-  const saveVisited = useCallback((list, level) => {
-    const key = level === 'parishes' ? 'visited_parishes' : 'visited_municipalities'
-    setUser(prev => {
-      if (!prev) return prev
-      const db = readDB()
-      if (!db[prev.id]) return prev
-      db[prev.id][key] = list; writeDB(db)
-      return { ...prev, [key]: list }
-    })
+  const saveVisited = useCallback(async (list, level) => {
+    if (!user?.supabaseId) return
+    const col = level === 'parishes' ? 'visited_parishes' : 'visited_municipalities'
+    await supabase.from('profiles').update({ [col]: list }).eq('id', user.supabaseId)
+    setUser(prev => prev ? { ...prev, [col]: list } : prev)
+  }, [user?.supabaseId])
+
+  const updatePhoto = useCallback(async (photoDataUrl) => {
+    if (!user?.supabaseId) return
+    await supabase.from('profiles').update({ photo_url: photoDataUrl }).eq('id', user.supabaseId)
+    setUser(prev => prev ? { ...prev, photo: photoDataUrl } : prev)
+  }, [user?.supabaseId])
+
+  const getAllUsers = useCallback(async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('joined_at', { ascending: false })
+    if (!data) return []
+    return data
+      .filter(p => !p.is_admin)
+      .map(p => ({
+        id:                     p.username,
+        supabaseId:             p.id,
+        photo:                  p.photo_url || null,
+        country:                p.country || 'Portugal',
+        isAdmin:                p.is_admin,
+        approved:               p.approved,
+        joinedAt:               new Date(p.joined_at).getTime(),
+        visited_municipalities: p.visited_municipalities || [],
+        visited_parishes:       p.visited_parishes || [],
+      }))
   }, [])
 
-  const updatePhoto = useCallback((photo) => {
-    setUser(prev => {
-      if (!prev) return prev
-      const db = readDB()
-      if (!db[prev.id]) return prev
-      db[prev.id].photo = photo; writeDB(db)
-      return { ...prev, photo }
-    })
+  const setUserApproved = useCallback(async (supabaseId, approved) => {
+    await supabase.from('profiles').update({ approved }).eq('id', supabaseId)
   }, [])
 
-  const getAllUsers = useCallback(() => {
-    const db = readDB()
-    return Promise.resolve(
-      Object.entries(db)
-        .filter(([id]) => id !== ADMIN_USER)
-        .map(([id, d]) => ({ id, ...d }))
-        .sort((a, b) => b.joinedAt - a.joinedAt)
-    )
+  const deleteUser = useCallback(async (supabaseId) => {
+    await supabase.from('profiles').delete().eq('id', supabaseId)
   }, [])
 
-  const setUserApproved = useCallback((id, approved) => {
-    const db = readDB()
-    if (db[id]) { db[id].approved = approved; writeDB(db) }
-  }, [])
-
-  const deleteUser = useCallback((id) => {
-    const db = readDB(); delete db[id]; writeDB(db)
-  }, [])
-
-  const resetPassword = useCallback((id, newPw) => {
-    const db = readDB()
-    if (db[id]) { db[id].pw = newPw; writeDB(db) }
+  const resetPassword = useCallback(async (_supabaseId, _newPw) => {
+    console.warn('Reset de password requer Supabase Dashboard ou Edge Function')
   }, [])
 
   return (
