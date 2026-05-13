@@ -18,6 +18,7 @@ export function AuthProvider({ children }) {
     setUser({
       id:                     profile.username,
       supabaseId:             supabaseUser.id,
+      email:                  supabaseUser.email,
       photo:                  profile.photo_url || null,
       country:                profile.country || 'Portugal',
       isAdmin:                profile.is_admin || false,
@@ -38,11 +39,10 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const login = useCallback(async (username, password) => {
-    const email = `${username.trim().toLowerCase()}@poronde.app`
+  const login = useCallback(async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      if (error.message.includes('Invalid login')) return { err: 'Utilizador ou palavra-passe incorretos.' }
+      if (error.message.includes('Invalid login')) return { err: 'Email ou palavra-passe incorretos.' }
       return { err: error.message }
     }
     const { data: { user: sbUser } } = await supabase.auth.getUser()
@@ -56,17 +56,19 @@ export function AuthProvider({ children }) {
     return { ok: true }
   }, [])
 
-  const register = useCallback(async (username, password, photo, country) => {
+  const register = useCallback(async (username, email, password, photo, country) => {
     const key = username.trim().toLowerCase()
     if (key.length < 2)      return { err: 'Nome demasiado curto (mín. 2 caracteres).' }
     if (password.length < 4) return { err: 'Palavra-passe demasiado curta (mín. 4 caracteres).' }
-    const email = `${key}@poronde.app`
+    if (!email.includes('@')) return { err: 'Email inválido.' }
+
     const { error } = await supabase.auth.signUp({
-      email, password,
+      email,
+      password,
       options: { data: { username: key, country: country || 'Portugal' } }
     })
     if (error) {
-      if (error.message.includes('already registered')) return { err: 'Este utilizador já existe.' }
+      if (error.message.includes('already registered')) return { err: 'Este email já está registado.' }
       return { err: error.message }
     }
     await supabase.auth.signOut()

@@ -40,6 +40,7 @@ function Field({ label, type = 'text', value, onChange, placeholder, autoFocus, 
 export default function AuthPage() {
   const { login, register } = useAuth()
   const [tab,     setTab]    = useState('login')
+  const [email,   setEmail]  = useState('')
   const [name,    setName]   = useState('')
   const [pw,      setPw]     = useState('')
   const [country, setCountry]= useState('Portugal')
@@ -58,7 +59,9 @@ export default function AuthPage() {
   async function submit(e) {
     e.preventDefault(); setErr(''); setBusy(true)
     await new Promise(r => setTimeout(r, 220))
-    const res = tab === 'login' ? login(name, pw) : register(name, pw, photo, country)
+    const res = tab === 'login'
+      ? await login(email, pw)
+      : await register(name, email, pw, photo, country)
     setBusy(false)
     if (res?.err) setErr(res.err)
     if (res?.pending) setErr('✓ Conta criada com sucesso! Aguarda validação — assim que estiver ativa poderás começar a viajar.')
@@ -69,31 +72,23 @@ export default function AuthPage() {
       height:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
       background:'#eeeeee', padding:20, position:'relative', overflow:'hidden',
     }}>
-      {/* Subtle grid */}
       <div style={{ position:'absolute', inset:0, opacity:.06, pointerEvents:'none',
         backgroundImage:'linear-gradient(#999 1px,transparent 1px),linear-gradient(90deg,#999 1px,transparent 1px)',
         backgroundSize:'28px 28px' }}/>
 
       <div style={{ width:'100%', maxWidth:380, position:'relative', animation:'popIn .35s ease' }}>
 
-        {/* Brand — tighter spacing */}
         <div style={{ textAlign:'center', marginBottom:20 }}>
           <img src="/logo.png" alt="Vou PorOnde" style={{ width:240, height:'auto', marginBottom:2 }}/>
           {tab === 'login' && (
-            <p style={{
-              color:'#666', fontSize:13, fontStyle:'italic',
-              lineHeight:1.45, margin:'0 auto', maxWidth:260,
-              animation:'fadeUp .4s ease',
-            }}>
+            <p style={{ color:'#666', fontSize:13, fontStyle:'italic', lineHeight:1.45, margin:'0 auto', maxWidth:260, animation:'fadeUp .4s ease' }}>
               "Não sei para onde vou,<br/>só sei que vou por aí"
             </p>
           )}
         </div>
 
-        {/* Card */}
         <div style={{ background:'#fff', borderRadius:18, padding:'24px 26px 20px', border:'1px solid #ddd', boxShadow:'0 4px 32px rgba(0,0,0,.07)' }}>
 
-          {/* Tabs */}
           <div style={{ display:'flex', background:'#f2f0ed', borderRadius:11, padding:3, marginBottom:22, gap:3 }}>
             {[['login','Entrar'],['register','Criar conta']].map(([k,label]) => (
               <button key={k} onClick={() => { setTab(k); setErr('') }} style={{
@@ -131,8 +126,13 @@ export default function AuthPage() {
               </div>
             )}
 
-            <Field label="Nome de utilizador" value={name} onChange={setName}
-              placeholder={tab==='login' ? 'O teu nome' : 'ex: joao ou email'} autoFocus autoComplete="username"/>
+            {tab === 'register' && (
+              <Field label="Nome de utilizador" value={name} onChange={setName}
+                placeholder="ex: joao.silva" autoComplete="username"/>
+            )}
+
+            <Field label="Email" type="email" value={email} onChange={setEmail}
+              placeholder="o.teu@email.com" autoFocus autoComplete="email"/>
 
             <Field label="Palavra-passe" type="password" value={pw} onChange={setPw}
               placeholder="••••••••" autoComplete={tab==='login'?'current-password':'new-password'}/>
@@ -172,10 +172,6 @@ export default function AuthPage() {
             </button>
           </form>
         </div>
-
-        <p style={{ textAlign:'center', fontSize:11, color:'#999', marginTop:14 }}>
-          Admin: <strong>admin</strong> / <strong>admin1234</strong>
-        </p>
       </div>
     </div>
   )
