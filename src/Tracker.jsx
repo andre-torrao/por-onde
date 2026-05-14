@@ -253,6 +253,7 @@ export default function Tracker() {
             visitedPar={visitedPar}
             onView={handleSidebarView}
             onRemove={handleSidebarRemove}
+            onToggle={handleSidebarToggle}
             onZoomTo={id => { mapRef.current?.zoomToId(id); if (isMobile) setSidebar(false) }}
             idNameMap={idNameMap}
             level={level}
