@@ -4,11 +4,11 @@
 
 :root {
   /* Background palette — warm off-white */
-  --bg:        #f6f4f0;
+  --bg:        #eef2f0;
   --surface:   #ffffff;
-  --surface2:  #f0ede8;
-  --border:    #e6e1d9;
-  --border2:   #c8c2b8;
+  --surface2:  #e8efed;
+  --border:    #d8e4e0;
+  --border2:   #aac4bc;
   --text:      #18160f;
   --muted:     #7a7368;
 

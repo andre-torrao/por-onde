@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAuth } from './auth'
 import { supabase } from './supabase'
-import { ChevronLeft, Camera, Check, Globe, Calendar, Edit3, Eye, EyeOff, Star, Trash2, Home, User, MapPin, TrendingUp, Map, Lock } from 'lucide-react'
+import { ChevronLeft, Camera, Check, Globe, Calendar, Edit3, Eye, EyeOff, Star, Trash2, Home, User, MapPin, TrendingUp, Map, Lock, Palette } from 'lucide-react'
 import idToNameData from './data/idToName.json'
 import { getSuggestionsForUser } from './storage'
 
@@ -90,112 +90,6 @@ function MiniRing({ pct, color, size=90 }) {
   )
 }
 
-// ── Explorer tab ─────────────────────────────────────────────────────
-function ExplorerTab({ user, visitedMun, visitedPar, idNameMap }) {
-  const [sub, setSub] = useState('municipalities')
-  const munCount = visitedMun.size, parCount = visitedPar.size
-  const munPct = Math.round(munCount / TOTAL_MUN * 100)
-  const parPct = Math.round(parCount / TOTAL_PAR * 100)
-  const lvl = getLevel(munPct), nextLvl = getNextLevel(munPct)
-
-  const isMun = sub === 'municipalities'
-  const count = isMun ? munCount : parCount
-  const total = isMun ? TOTAL_MUN : TOTAL_PAR
-  const pct   = isMun ? munPct : parPct
-  const color = isMun ? 'var(--accent)' : 'var(--blue)'
-  const colorHex = isMun ? '#0f766e' : '#2563eb'
-
-  const lastVisited = [...(isMun ? visitedMun : visitedPar)].slice(-6).reverse().map(id => {
-    const val = idNameMap.get(id)
-    if (val) return { name: typeof val === 'string' ? val : val?.displayName || val?.name, id }
-    return { name: idToNameData[id] || id.replace(/__\d+$/, '').replace(/-/g,' '), id }
-  }).filter(x => x.name)
-
-  return (
-    <div style={{ padding:'16px 16px 100px' }}>
-
-      {/* Sub-tabs */}
-      <div style={{ display:'flex', gap:8, marginBottom:18 }}>
-        {[
-          { key:'municipalities', label:'Concelhos', count:munCount, color:'#0f766e', bg:'#f0fdfa' },
-          { key:'parishes',       label:'Freguesias', count:parCount, color:'#2563eb', bg:'#eff6ff' },
-        ].map(t => (
-          <button key={t.key} onClick={() => setSub(t.key)} style={{
-            flex:1, padding:'12px 8px', borderRadius:14, border:'2px solid',
-            borderColor: sub===t.key ? t.color : 'var(--border)',
-            background: sub===t.key ? t.bg : 'var(--surface)',
-            cursor:'pointer', transition:'all .18s',
-          }}>
-            <div style={{ fontSize:20, fontWeight:900, color: sub===t.key ? t.color : 'var(--muted)', lineHeight:1 }}>{t.count}</div>
-            <div style={{ fontSize:11, fontWeight:600, color: sub===t.key ? t.color : 'var(--muted)', marginTop:2 }}>{t.label}</div>
-            <div style={{ fontSize:10, color:'var(--muted)', marginTop:1 }}>de {t.key==='municipalities'?TOTAL_MUN:TOTAL_PAR}</div>
-          </button>
-        ))}
-      </div>
-
-      {/* Ring chart */}
-      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'20px 16px', marginBottom:14, display:'flex', flexDirection:'column', alignItems:'center' }}>
-        <div style={{ position:'relative', width:200, height:200 }}>
-          <RingChart pct={pct} color={colorHex} size={200}/>
-          <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-            <div style={{ fontSize:36, fontWeight:900, color, lineHeight:1 }}>{pct}%</div>
-            <div style={{ fontSize:13, fontWeight:600, color:'var(--muted)', marginTop:2 }}>{isMun?'concelhos':'freguesias'}</div>
-            <div style={{ fontSize:12, color:'var(--muted)', marginTop:4 }}>{count} de {total}</div>
-          </div>
-        </div>
-
-        {/* Level pill */}
-        <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginTop:4, padding:'8px 16px', borderRadius:20, background:lvl.bg, border:`1px solid ${lvl.color}30` }}>
-          <div style={{ width:8, height:8, borderRadius:'50%', background:lvl.color }}/>
-          <span style={{ fontSize:13, fontWeight:700, color:lvl.color }}>{lvl.label}</span>
-          {nextLvl && <span style={{ fontSize:11, color:'var(--muted)' }}>→ {nextLvl.label} a {nextLvl.min}%</span>}
-        </div>
-
-        {/* Progress bar */}
-        <div style={{ width:'100%', marginTop:12, height:6, background:'var(--border)', borderRadius:3, overflow:'hidden' }}>
-          <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg,${colorHex},${nextLvl?.color||colorHex})`, borderRadius:3, transition:'width .8s' }}/>
-        </div>
-      </div>
-
-      {/* Both mini rings side by side */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
-        {[
-          { label:'Concelhos', count:munCount, total:TOTAL_MUN, pct:munPct, color:'#0f766e', bg:'#f0fdfa' },
-          { label:'Freguesias', count:parCount, total:TOTAL_PAR, pct:parPct, color:'#2563eb', bg:'#eff6ff' },
-        ].map(s => (
-          <div key={s.label} style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, padding:'14px 10px', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-            <div style={{ position:'relative', width:90, height:90 }}>
-              <MiniRing pct={s.pct} color={s.color} size={90}/>
-              <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-                <span style={{ fontSize:16, fontWeight:800, color:s.color }}>{s.count}</span>
-                <span style={{ fontSize:9, color:'var(--muted)' }}>{s.pct}%</span>
-              </div>
-            </div>
-            <div style={{ fontSize:12, fontWeight:600, color:'var(--text)' }}>{s.label}</div>
-            <div style={{ fontSize:10, color:'var(--muted)' }}>de {s.total}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Last visited */}
-      {lastVisited.length > 0 && (
-        <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16, padding:'14px' }}>
-          <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', color:'var(--muted)', marginBottom:10 }}>
-            Últimos {isMun?'concelhos':'freguesias'} visitados
-          </div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
-            {lastVisited.map(({ name, id }, i) => (
-              <div key={id} style={{ padding:'6px 12px', borderRadius:20, background: isMun?'#f0fdfa':'#eff6ff', border:`1px solid ${isMun?'rgba(15,118,110,.2)':'rgba(37,99,235,.2)'}`, fontSize:12, fontWeight:500, color: isMun?'#0f766e':'#2563eb' }}>
-                {name}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ── Profile info tab ─────────────────────────────────────────────────
 function ProfileInfoTab({ user, onEditProfile }) {
   const fields = [
@@ -222,6 +116,9 @@ function ProfileInfoTab({ user, onEditProfile }) {
           </div>
         ))}
       </div>
+
+      {/* Color picker */}
+      <ColorPicker/>
 
       <button onClick={onEditProfile} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:14, border:'1.5px solid var(--accent-border)', background:'var(--accent-bg)', cursor:'pointer', width:'100%' }}>
         <Edit3 size={15} style={{ color:'var(--accent)', flexShrink:0 }}/>
@@ -255,7 +152,7 @@ function FavoritesTab({ user }) {
     <div style={{ textAlign:'center', padding:'60px 28px' }}>
       <div style={{ width:56, height:56, borderRadius:16, background:'#fffbeb', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', border:'1px solid rgba(217,119,6,.2)' }}><Star size={26} color="#d97706"/></div>
       <div style={{ fontSize:16, fontWeight:700, color:'var(--text)', marginBottom:6 }}>Nenhum favorito ainda</div>
-      <div style={{ fontSize:13, lineHeight:1.7, color:'var(--muted)' }}>Toca na estrela num concelho ou freguesia para guardar para as próximas viagens.</div>
+      <div style={{ fontSize:13, lineHeight:1.7, color:'var(--muted)' }}>Toca na estrela num local para guardar para as próximas viagens.</div>
     </div>
   )
 
@@ -292,7 +189,7 @@ function SubmissionsTab({ userId }) {
     <div style={{ textAlign:'center', padding:'60px 28px' }}>
       <div style={{ width:56, height:56, borderRadius:16, background:'#f5f3ff', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', border:'1px solid rgba(124,58,237,.2)' }}><TrendingUp size={26} color="#7c3aed"/></div>
       <div style={{ fontSize:16, fontWeight:700, color:'var(--text)', marginBottom:6 }}>Nenhuma sugestão ainda</div>
-      <div style={{ fontSize:13, lineHeight:1.7, color:'var(--muted)' }}>Explora o mapa e sugere informação sobre os locais que conheces!</div>
+      <div style={{ fontSize:13, lineHeight:1.7, color:'var(--muted)' }}>Explora o mapa e sugere informação sobre os locais que conheces.</div>
     </div>
   )
 
@@ -331,7 +228,7 @@ function SubmissionsTab({ userId }) {
 
 // ── Edit profile ─────────────────────────────────────────────────────
 function EditProfilePanel({ user, onSaved }) {
-  const { updatePhoto } = useAuth()
+  const { updatePhoto, updateProfile } = useAuth()
   // Use local state that doesn't re-render parent on every keystroke
   const [fields, setFields] = useState({
     displayName: user?.displayName || user?.id || '',
@@ -350,15 +247,16 @@ function EditProfilePanel({ user, onSaved }) {
 
   async function save() {
     setBusy(true)
-    await supabase.from('profiles').update({
-      display_name: fields.displayName,
-      full_name:    fields.fullName,
-      country:      fields.country,
-      location:     fields.location,
-    }).eq('id', user.supabaseId)
+    // Optimistic update — instant in UI
+    await updateProfile({
+      displayName: fields.displayName,
+      fullName:    fields.fullName,
+      country:     fields.country,
+      location:    fields.location,
+    })
     if (fields.pw.length >= 4) { await supabase.auth.updateUser({ password: fields.pw }) }
     setBusy(false); setSaved(true)
-    setTimeout(() => { setSaved(false); onSaved() }, 1500)
+    setTimeout(() => { setSaved(false); onSaved() }, 800)
   }
 
   function handlePhoto(e) {
@@ -463,9 +361,9 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
   const lvl = getLevel(munPct)
 
   const TABS = [
-    { key:'explorer',    label:'Explorador' },
-    { key:'favorites',   label:'Favoritos'  },
-    { key:'suggestions', label:'Sugestões'  },
+    { key:'explorer',    label:'Explorador'   },
+    { key:'favorites',   label:'Favoritos'    },
+    { key:'suggestions', label:'Sugestões'    },
     { key:'info',        label:'O Meu Perfil' },
   ]
 
@@ -540,4 +438,96 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
       </div>
     </div>
   )
+}// ── Explorer tab ─────────────────────────────────────────────────────
+function ExplorerTab({ visitedMun, visitedPar, idNameMap }) {
+  const [sub, setSub] = useState('municipalities')
+  const munCount = visitedMun.size, parCount = visitedPar.size
+  const munPct = Math.round(munCount / TOTAL_MUN * 100)
+  const parPct = Math.round(parCount / TOTAL_PAR * 100)
+
+  const isMun  = sub === 'municipalities'
+  const count  = isMun ? munCount : parCount
+  const total  = isMun ? TOTAL_MUN : TOTAL_PAR
+  const pct    = isMun ? munPct : parPct
+  const color  = isMun ? '#0f766e' : '#2563eb'
+  const bgClr  = isMun ? '#f0fdfa' : '#eff6ff'
+  const lvl    = getLevel(munPct)
+  const nextLvl = getNextLevel(munPct)
+
+  const lastVisited = [...(isMun ? visitedMun : visitedPar)].slice(-8).reverse().map(id => {
+    const val = idNameMap.get(id)
+    if (val) return { name: typeof val === 'string' ? val : val?.displayName || val?.name, id }
+    return { name: idToNameData[id] || id.replace(/__\d+$/, '').replace(/-/g,' '), id }
+  }).filter(x => x.name)
+
+  return (
+    <div style={{ padding:'16px 16px 100px' }}>
+      {/* Sub-tabs */}
+      <div style={{ display:'flex', gap:8, marginBottom:18 }}>
+        {[
+          { key:'municipalities', label:'Concelhos',  count:munCount, total:TOTAL_MUN, pct:munPct, color:'#0f766e', bg:'#f0fdfa' },
+          { key:'parishes',       label:'Freguesias', count:parCount, total:TOTAL_PAR, pct:parPct, color:'#2563eb', bg:'#eff6ff' },
+        ].map(t => (
+          <button key={t.key} onClick={() => setSub(t.key)} style={{
+            flex:1, padding:'12px 8px', borderRadius:14, border:'2px solid',
+            borderColor: sub===t.key ? t.color : 'var(--border)',
+            background: sub===t.key ? t.bg : 'var(--surface)',
+            cursor:'pointer', transition:'all .18s',
+          }}>
+            <div style={{ fontSize:20, fontWeight:900, color: sub===t.key ? t.color : 'var(--muted)', lineHeight:1 }}>{t.count}</div>
+            <div style={{ fontSize:11, fontWeight:600, color: sub===t.key ? t.color : 'var(--muted)', marginTop:2 }}>{t.label}</div>
+            <div style={{ fontSize:10, color:'var(--muted)', marginTop:1 }}>de {t.total}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Ring chart — one per subtab */}
+      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'20px 16px 16px', marginBottom:14 }}>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+          <div style={{ position:'relative', width:200, height:200 }}>
+            <RingChart pct={pct} color={color} size={200}/>
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ fontSize:38, fontWeight:900, color, lineHeight:1 }}>{pct}%</div>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--muted)', marginTop:2 }}>{isMun?'concelhos':'freguesias'}</div>
+              <div style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>{count} de {total}</div>
+            </div>
+          </div>
+
+          {/* Level pill */}
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'8px 16px', borderRadius:20, background:lvl.bg, border:`1px solid ${lvl.color}30` }}>
+            <div style={{ width:8, height:8, borderRadius:'50%', background:lvl.color }}/>
+            <span style={{ fontSize:13, fontWeight:700, color:lvl.color }}>{lvl.label}</span>
+            {nextLvl && <span style={{ fontSize:11, color:'var(--muted)' }}>→ {nextLvl.label} a {nextLvl.min}%</span>}
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ width:'100%', height:6, background:'var(--border)', borderRadius:3, overflow:'hidden' }}>
+            <div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg,${color},${nextLvl?.color||color})`, borderRadius:3, transition:'width .8s' }}/>
+          </div>
+        </div>
+      </div>
+
+      {/* Last visited */}
+      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16, padding:'14px' }}>
+        <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', color:'var(--muted)', marginBottom:10 }}>
+          Últimos {isMun?'concelhos':'freguesias'} visitados
+        </div>
+        {lastVisited.length === 0 ? (
+          <div style={{ fontSize:13, color:'var(--muted)', fontStyle:'italic', padding:'8px 0' }}>
+            Ainda não visitaste nenhum{isMun?' concelho':'a freguesia'}. Abre o mapa e começa!
+          </div>
+        ) : (
+          <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+            {lastVisited.map(({ name, id }) => (
+              <div key={id} style={{ padding:'6px 12px', borderRadius:20, background:bgClr, border:`1px solid ${color}30`, fontSize:12, fontWeight:500, color }}>
+                {name}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
+
+

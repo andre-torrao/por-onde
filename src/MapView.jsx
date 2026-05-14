@@ -7,11 +7,20 @@ async function fetchDataset(level) {
   const m = await import('./data/municipalities-final.json'); return m.default
 }
 
-function featureStyle(isVisited, isHovered) {
+function hexDarken(hex, amount=0.25) {
+  const n = parseInt(hex.replace('#',''), 16)
+  const r = Math.max(0, ((n>>16)&255) - Math.round(255*amount))
+  const g = Math.max(0, ((n>>8)&255)  - Math.round(255*amount))
+  const b = Math.max(0, (n&255)       - Math.round(255*amount))
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('')
+}
+
+function featureStyle(isVisited, isHovered, visitedColor='#0f766e') {
+  const dark = hexDarken(visitedColor, 0.22)
   return {
-    fillColor:   isVisited ? '#e8612e' : '#d8d4ca',
-    fillOpacity: isHovered ? 0.85 : isVisited ? 0.75 : 0.50,
-    color:       isHovered ? '#c04020' : isVisited ? '#a83010' : '#a8a49a',
+    fillColor:   isVisited ? visitedColor : '#d8d4ca',
+    fillOpacity: isHovered ? 0.9 : isVisited ? 0.78 : 0.50,
+    color:       isHovered ? dark : isVisited ? dark : '#a8a49a',
     weight:      isHovered ? 2.0 : isVisited ? 1.4 : 0.6,
   }
 }
@@ -35,7 +44,7 @@ function getCenter(layer) {
   return null
 }
 
-const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onReady, level }, ref) {
+const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onReady, level, markColor }, ref) {
   const elRef      = useRef(null)
   const mapRef     = useRef(null)
   const geoRef     = useRef(null)
@@ -44,9 +53,20 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
   const idNamesRef = useRef({})   // id → displayName (for labels)
   const hoveredRef = useRef(null)
   const visitedRef = useRef(visited)
+  const colorRef   = useRef(markColor || '#0f766e')
 
-  // Keep visitedRef always current
+  // Keep refs always current
   useEffect(() => { visitedRef.current = visited }, [visited])
+  useEffect(() => {
+    colorRef.current = markColor || '#0f766e'
+    // Re-style all visited layers with new color
+    const geo = geoRef.current
+    if (!geo) return
+    geo.eachLayer(layer => {
+      const id = layer._pid
+      if (id) layer.setStyle(featureStyle(visitedRef.current.has(id), false, colorRef.current))
+    })
+  }, [markColor])
 
   // Update styles AND labels when visited changes
   useEffect(() => {
@@ -116,7 +136,7 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
 
     const geo = L.geoJSON(dataset, {
       // IMPORTANT: style function uses visitedRef (always current) not the closed-over visited
-      style: f => featureStyle(visitedRef.current.has(makeId(f.properties)), false),
+      style: f => featureStyle(visitedRef.current.has(makeId(f.properties)), false, colorRef.current),
 
       onEachFeature(f, layer) {
         const id          = makeId(f.properties)
@@ -155,10 +175,10 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
           // Clear previous hovered layer
           if (hoveredRef.current && hoveredRef.current !== layerId) {
             const prev = layersRef.current[hoveredRef.current]
-            if (prev) prev.setStyle(featureStyle(visitedRef.current.has(hoveredRef.current), false))
+            if (prev) prev.setStyle(featureStyle(visitedRef.current.has(hoveredRef.current), false, colorRef.current))
           }
           hoveredRef.current = layerId
-          layer.setStyle(featureStyle(visitedRef.current.has(layerId), true))
+          layer.setStyle(featureStyle(visitedRef.current.has(layerId), true, colorRef.current))
           onHover({
             name: layerDisplayName, rawName: name, concelho, id: layerId,
             isVisited: visitedRef.current.has(layerId),
@@ -172,7 +192,7 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
 
         layer.on('mouseout', () => {
           if (hoveredRef.current === layerId) hoveredRef.current = null
-          layer.setStyle(featureStyle(visitedRef.current.has(layerId), false))
+          layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current))
           onHover(null)
         })
 

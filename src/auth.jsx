@@ -20,9 +20,11 @@ export function AuthProvider({ children }) {
       supabaseId:             supabaseUser.id,
       email:                  supabaseUser.email,
       displayName:            profile.display_name || profile.username,
+      fullName:               profile.full_name || '',
       photo:                  profile.photo_url || null,
       country:                profile.country || 'Portugal',
       location:               profile.location || '',
+      markColor:              profile.mark_color || '#0f766e',
       isAdmin:                profile.is_admin || false,
       approved:               profile.approved || false,
       joinedAt:               new Date(profile.joined_at).getTime(),
@@ -128,10 +130,26 @@ export function AuthProvider({ children }) {
     console.warn('Reset de password requer Supabase Dashboard ou Edge Function')
   }, [])
 
+  const updateProfile = useCallback(async (updates) => {
+    if (!user?.supabaseId) return
+    // Optimistically update local state immediately
+    setUser(prev => prev ? { ...prev, ...updates } : prev)
+    // Map camelCase to snake_case for DB
+    const dbUpdates = {}
+    if ('displayName' in updates) dbUpdates.display_name = updates.displayName
+    if ('fullName'    in updates) dbUpdates.full_name    = updates.fullName
+    if ('country'     in updates) dbUpdates.country      = updates.country
+    if ('location'    in updates) dbUpdates.location     = updates.location
+    if ('markColor'   in updates) dbUpdates.mark_color   = updates.markColor
+    if (Object.keys(dbUpdates).length > 0) {
+      await supabase.from('profiles').update(dbUpdates).eq('id', user.supabaseId)
+    }
+  }, [user?.supabaseId])
+
   return (
     <Ctx.Provider value={{
       user, ready, login, register, logout,
-      saveVisited, updatePhoto, getAllUsers,
+      saveVisited, updatePhoto, updateProfile, getAllUsers,
       setUserApproved, deleteUser, resetPassword,
     }}>
       {children}
