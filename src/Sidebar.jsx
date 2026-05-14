@@ -117,8 +117,8 @@ export default function Sidebar({
             {user?.photo ? <img src={user.photo} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/> : <span style={{ fontSize:22 }}>👤</span>}
           </div>
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:11, color:'var(--muted)', lineHeight:1 }}>Olá,</div>
-            <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.3 }}>{user?.id}</div>
+            <div style={{ fontSize:13, color:'var(--muted)', lineHeight:1 }}>Olá,</div>
+            <div style={{ fontWeight:700, fontSize:15, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.3 }}>{user?.displayName || user?.id}</div>
           </div>
           <button onClick={onClose} style={{ width:36, height:36, borderRadius:10, border:'1px solid var(--border)', background:'var(--surface2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--muted)', flexShrink:0 }}>
             <X size={14}/>
