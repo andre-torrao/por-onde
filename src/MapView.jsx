@@ -44,7 +44,7 @@ function getCenter(layer) {
   return null
 }
 
-const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onReady, level, markColor }, ref) {
+const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onSelect, onReady, level, markColor, isMobile }, ref) {
   const elRef      = useRef(null)
   const mapRef     = useRef(null)
   const geoRef     = useRef(null)
@@ -52,12 +52,15 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
   const labelsRef  = useRef({})   // id → permanent tooltip
   const idNamesRef = useRef({})   // id → displayName (for labels)
   const hoveredRef = useRef(null)
-  const visitedRef = useRef(visited)
+  const visitedRef    = useRef(visited)
   const colorRef      = useRef(markColor || '#0f766e')
   const highlightedRef = useRef(null)
+  const isMobileRef   = useRef(isMobile)
+  const selectedRef   = useRef(null)
 
   // Keep refs always current
   useEffect(() => { visitedRef.current = visited }, [visited])
+  useEffect(() => { isMobileRef.current = isMobile }, [isMobile])
   useEffect(() => {
     colorRef.current = markColor || '#0f766e'
     // Re-style all visited layers with new color
@@ -143,6 +146,8 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
     }
     layersRef.current = {}
     idNamesRef.current = {}
+    selectedRef.current = null
+    highlightedRef.current = null
   }
 
   async function loadLevel(map, lvl) {
@@ -194,33 +199,63 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
         const layerId = id // capture in closure
         const layerDisplayName = displayName
 
-        layer.on('mouseover', e => {
-          // Clear previous hovered layer
-          if (hoveredRef.current && hoveredRef.current !== layerId) {
-            const prev = layersRef.current[hoveredRef.current]
-            if (prev) prev.setStyle(featureStyle(visitedRef.current.has(hoveredRef.current), false, colorRef.current))
-          }
-          hoveredRef.current = layerId
-          layer.setStyle(featureStyle(visitedRef.current.has(layerId), true, colorRef.current))
-          onHover({
-            name: layerDisplayName, rawName: name, concelho, id: layerId,
-            isVisited: visitedRef.current.has(layerId),
-            x: e.originalEvent.clientX, y: e.originalEvent.clientY
+        // ── Desktop: hover shows card, click marks visited ──────────────
+        if (!isMobileRef.current) {
+          layer.on('mouseover', e => {
+            if (hoveredRef.current && hoveredRef.current !== layerId) {
+              const prev = layersRef.current[hoveredRef.current]
+              if (prev) prev.setStyle(featureStyle(visitedRef.current.has(hoveredRef.current), false, colorRef.current))
+            }
+            hoveredRef.current = layerId
+            layer.setStyle(featureStyle(visitedRef.current.has(layerId), true, colorRef.current))
+            onHover({
+              name: layerDisplayName, rawName: name, concelho, id: layerId,
+              isVisited: visitedRef.current.has(layerId),
+              x: e.originalEvent.clientX, y: e.originalEvent.clientY
+            })
           })
-        })
-
-        layer.on('mousemove', e => {
-          onHover(p => p ? { ...p, x: e.originalEvent.clientX, y: e.originalEvent.clientY } : null)
-        })
-
-        layer.on('mouseout', () => {
-          if (hoveredRef.current === layerId) hoveredRef.current = null
-          layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current))
-          onHover(null)
-        })
-
-        // CRITICAL: click uses the unique layerId, not a shared variable
-        layer.on('click', () => onToggle(layerId, layerDisplayName))
+          layer.on('mousemove', e => {
+            onHover(p => p ? { ...p, x: e.originalEvent.clientX, y: e.originalEvent.clientY } : null)
+          })
+          layer.on('mouseout', () => {
+            if (hoveredRef.current === layerId) hoveredRef.current = null
+            layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current))
+            onHover(null)
+          })
+          layer.on('click', () => onToggle(layerId, layerDisplayName))
+        } else {
+          // ── Mobile: first click = highlight + show card, second click = mark ──
+          layer.on('click', e => {
+            L.DomEvent.stopPropagation(e)
+            const alreadySelected = selectedRef.current === layerId
+            // Clear previous selection highlight
+            if (selectedRef.current && selectedRef.current !== layerId) {
+              const prev = layersRef.current[selectedRef.current]
+              if (prev) prev.setStyle(featureStyle(visitedRef.current.has(selectedRef.current), false, colorRef.current))
+            }
+            if (alreadySelected) {
+              // Second tap = mark as visited
+              selectedRef.current = null
+              layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current))
+              onToggle(layerId, layerDisplayName)
+            } else {
+              // First tap = highlight + show card
+              selectedRef.current = layerId
+              layer.setStyle({
+                fillColor:   colorRef.current,
+                fillOpacity: 0.35,
+                color:       colorRef.current,
+                weight:      3,
+                dashArray:   '5 4',
+              })
+              onSelect({
+                name: layerDisplayName, rawName: name, concelho, id: layerId,
+                isVisited: visitedRef.current.has(layerId),
+                x: e.originalEvent.clientX, y: e.originalEvent.clientY
+              })
+            }
+          })
+        }
       },
     }).addTo(map)
 

@@ -88,6 +88,7 @@ export default function Tracker() {
   }, [])
 
   const handleHover = useCallback((info) => {
+    if (isMobile) return // mobile uses handleSelect instead
     clearTimeout(hideTimer.current)
     if (info) {
       setTooltip(info)
@@ -96,7 +97,13 @@ export default function Tracker() {
         if (!pinnedRef.current) setTooltip(null)
       }, 400)
     }
-  }, [])
+  }, [isMobile])
+
+  // Mobile: first tap shows card with highlight (no toggle)
+  const handleSelect = useCallback((info) => {
+    setTooltip({ ...info, isVisited: visited.has(info.id) })
+    pinCard()
+  }, [visited])
 
   const handleCardEnter = useCallback(() => { clearTimeout(hideTimer.current) }, [])
   const handleCardLeave = useCallback(() => {
@@ -280,9 +287,11 @@ export default function Tracker() {
             visited={visited}
             onToggle={handleToggle}
             onHover={handleHover}
+            onSelect={handleSelect}
             onReady={setIdNameMap}
             level={level}
             markColor={markColor}
+            isMobile={isMobile}
           />
 
           {/* Legend — smaller on mobile */}
@@ -309,6 +318,7 @@ export default function Tracker() {
               tooltip={tooltip}
               level={level}
               isMobile={isMobile}
+              onToggle={(id, name) => { handleToggle(id, name); setTooltip(prev => prev ? { ...prev, isVisited: !visited.has(id) } : prev) }}
               onOpenSuggest={() => tooltip && setSuggest({ id: tooltip.id, name: tooltip.name })}
               onClose={handleCloseCard}
               onMouseEnter={handleCardEnter}

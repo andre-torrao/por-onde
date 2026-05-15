@@ -33,7 +33,7 @@ function SectionBlock({ icon, color, title, children, empty }) {
   )
 }
 
-export default function InfoCard({ tooltip, onOpenSuggest, onClose, level, isMobile, onMouseEnter, onMouseLeave }) {
+export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, level, isMobile, onMouseEnter, onMouseLeave }) {
   const { user } = useAuth()
   const [approved, setApproved] = useState([])
   const [isFav, setIsFav] = useState(false)
@@ -112,7 +112,7 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, level, isMob
     position:'fixed', left:0, right:0, bottom:0, top:'auto',
     width:'100%', maxWidth:'100%',
     borderRadius:'20px 20px 0 0',
-    maxHeight:'78vh',
+    maxHeight:'52vh',
     animation:'slideUp .3s cubic-bezier(.4,0,.2,1)',
     paddingBottom:'var(--safe-bottom)',
     zIndex:9999,
@@ -210,14 +210,23 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, level, isMob
       </div>
 
       {/* Action bar */}
-      <div style={{ padding: isMobile ? '10px 16px 16px' : '8px 14px 12px', borderTop:'1px solid var(--border)', display:'flex', alignItems:'center', gap:6, marginTop:4 }}>
-        <span style={{ fontSize:12, color: isVisited?'var(--accent)':'var(--muted)', flex:1, fontWeight: isVisited?600:400 }}>
-          {isVisited ? '✓ Visitado' : isMobile ? 'Toca no mapa para marcar' : 'Clica no mapa para marcar'}
-        </span>
-        <button onClick={toggleFavorite} title={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'} style={{
+      <div style={{ padding: isMobile ? '10px 14px 14px' : '8px 14px 10px', borderTop:'1px solid var(--border)', display:'flex', alignItems:'center', gap:6, marginTop:4, flexWrap: isMobile ? 'nowrap' : 'nowrap' }}>
+        {/* Visited button */}
+        <button onClick={() => onToggle && onToggle(locationId, name)} style={{
+          display:'flex', alignItems:'center', gap:5,
+          padding: isMobile ? '9px 14px' : '6px 12px',
+          borderRadius:9, border:'1.5px solid',
+          borderColor: isVisited ? 'var(--accent)' : 'var(--border)',
+          background: isVisited ? 'var(--accent)' : 'var(--surface2)',
+          color: isVisited ? '#fff' : 'var(--muted)',
+          fontSize:12, fontWeight:700, cursor:'pointer', flexShrink:0, transition:'all .18s',
+        }}>
+          {isVisited ? '✓ Visitado' : '+ Marcar'}
+        </button>
+        {/* Favorite */}
+        <button onClick={toggleFavorite} title={isFav ? 'Remover favorito' : 'Favorito'} style={{
           display:'flex', alignItems:'center', justifyContent:'center',
-          width: isMobile ? 38 : 32, height: isMobile ? 38 : 32,
-          borderRadius:8, border:'1px solid',
+          width:36, height:36, borderRadius:9, border:'1px solid',
           borderColor: isFav ? '#f59e0b' : 'var(--border)',
           background: isFav ? '#fef3c7' : 'var(--surface2)',
           color: isFav ? '#f59e0b' : 'var(--muted)',
@@ -225,12 +234,14 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, level, isMob
         }}>
           <Star size={14} fill={isFav ? '#f59e0b' : 'none'}/>
         </button>
+        <div style={{ flex:1 }}/>
+        {/* Suggest */}
         <button onClick={onOpenSuggest} style={{
           display:'flex', alignItems:'center', gap:5,
-          padding: isMobile ? '8px 12px' : '5px 10px',
-          borderRadius:8, border:'1px solid var(--border)',
+          padding: isMobile ? '9px 12px' : '6px 10px',
+          borderRadius:9, border:'1px solid var(--border)',
           background:'var(--surface2)', color:'var(--muted)',
-          fontSize:12, fontWeight:600, fontFamily:'Open Sans,sans-serif', cursor:'pointer',
+          fontSize:12, fontWeight:600, cursor:'pointer', flexShrink:0,
         }}>
           <MessageSquarePlus size={13}/> Sugerir
         </button>
