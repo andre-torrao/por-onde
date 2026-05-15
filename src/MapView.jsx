@@ -53,7 +53,8 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
   const idNamesRef = useRef({})   // id → displayName (for labels)
   const hoveredRef = useRef(null)
   const visitedRef = useRef(visited)
-  const colorRef   = useRef(markColor || '#0f766e')
+  const colorRef      = useRef(markColor || '#0f766e')
+  const highlightedRef = useRef(null)
 
   // Keep refs always current
   useEffect(() => { visitedRef.current = visited }, [visited])
@@ -108,6 +109,28 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onRead
         const b = layer.getBounds ? layer.getBounds() : null
         if (b && b.isValid()) map.fitBounds(b, { maxZoom: 12, padding: [60, 60], animate: true })
       } catch(_) {}
+      // Highlight: clear previous, apply highlight style
+      const prev = highlightedRef.current
+      if (prev && prev !== layer) {
+        const prevId = prev._pid
+        prev.setStyle(featureStyle(visitedRef.current.has(prevId), false, colorRef.current))
+      }
+      highlightedRef.current = layer
+      layer.setStyle({
+        fillColor:   '#facc15',
+        fillOpacity: 0.55,
+        color:       '#ca8a04',
+        weight:      2.5,
+        dashArray:   '6 3',
+      })
+      // Auto-remove highlight after 3s if not visited
+      setTimeout(() => {
+        if (highlightedRef.current === layer) {
+          const lid = layer._pid
+          layer.setStyle(featureStyle(visitedRef.current.has(lid), false, colorRef.current))
+          highlightedRef.current = null
+        }
+      }, 3000)
     }
   }), [])
 

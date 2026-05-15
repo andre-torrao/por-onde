@@ -172,7 +172,7 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, level, isMob
         <div style={{ display:'flex', flexWrap:'wrap', gap:'3px 10px', marginBottom:14 }}>
           {concelho && concelho !== name && <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12, color:'var(--muted)' }}><MapPin size={11}/> {concelho}</span>}
           {info?.district && <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12, color:'var(--muted)' }}><Building2 size={11}/> {info.district}</span>}
-          {(parishPop || info?.pop) && <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12, color:'var(--muted)' }}><Users size={11}/> {(parishPop || info.pop).toLocaleString('pt-PT')} hab.</span>}
+          {info?.pop && level === 'municipalities' && <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12, color:'var(--muted)' }}><Users size={11}/> {info.pop.toLocaleString('pt-PT')} hab.</span>}
         </div>
 
         <SectionBlock icon={<Star size={12}/>} color="#d4500a" title="Locais a Visitar" empty="Sem informação — podes sugerir!">

@@ -3,51 +3,46 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Background palette — warm off-white */
-  --bg:        #eef2f0;
+  --bg:        #f0f4ff;
   --surface:   #ffffff;
-  --surface2:  #e8efed;
-  --border:    #d8e4e0;
-  --border2:   #aac4bc;
-  --text:      #18160f;
-  --muted:     #7a7368;
+  --surface2:  #e8eef8;
+  --border:    #dce4f0;
+  --border2:   #b0c0d8;
+  --text:      #16141a;
+  --muted:     #6b7694;
 
-  /* Primary — deep teal */
-  --accent:    #0f766e;
-  --accent2:   #14b8a6;
-  --accent-bg: #f0fdfa;
-  --accent-border: rgba(15,118,110,.25);
+  --accent:    #6c63ff;
+  --accent2:   #8b85ff;
+  --accent-bg: #f0efff;
+  --accent-border: rgba(108,99,255,.25);
 
-  /* Semantic palette */
-  --coral:     #e85d3a;
-  --coral-bg:  #fff3f0;
-  --blue:      #2563eb;
-  --blue-bg:   #eff6ff;
-  --purple:    #7c3aed;
-  --purple-bg: #f5f3ff;
-  --amber:     #d97706;
-  --amber-bg:  #fffbeb;
-  --green:     #16a34a;
-  --green-bg:  #f0fdf4;
-  --pink:      #db2777;
-  --pink-bg:   #fdf2f8;
+  --coral:     #ff6b6b;
+  --coral-bg:  #fff1f1;
+  --blue:      #4ea8de;
+  --blue-bg:   #eef7ff;
+  --purple:    #9b72cf;
+  --purple-bg: #f5f0ff;
+  --amber:     #f9a825;
+  --amber-bg:  #fff8e1;
+  --green:     #43c59e;
+  --green-bg:  #edfdf7;
+  --pink:      #f06292;
+  --pink-bg:   #fce4ec;
+  --teal:      #26c6da;
+  --teal-bg:   #e0f7fa;
 
-  /* Map colours */
-  --visited:         #0f9688;
-  --visited-stroke:  #0b7068;
-  --unvisited:       #d8d3c8;
-  --unvisited-stroke:#b8b2a8;
+  --visited:         #6c63ff;
+  --visited-stroke:  #4b44cc;
+  --unvisited:       #dce4f0;
+  --unvisited-stroke:#b0c0d8;
 
-  /* Spacing / radius */
   --radius:    14px;
   --radius-sm: 9px;
-  --shadow:    0 2px 16px rgba(0,0,0,.07);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,.13);
+  --shadow:    0 2px 16px rgba(108,99,255,.1);
+  --shadow-lg: 0 8px 40px rgba(108,99,255,.15);
 
-  /* Safe areas */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top:    env(safe-area-inset-top, 0px);
-
   --font: 'Inter', system-ui, sans-serif;
 }
 
@@ -64,37 +59,34 @@ html, body, #root {
 }
 
 /* Leaflet */
-.leaflet-container        { background: #e4ded4 !important; }
-.leaflet-tile-pane        { filter: saturate(0.35) brightness(1.08) contrast(0.93); }
+.leaflet-container        { background: #e8eaf0 !important; }
+.leaflet-tile-pane        { filter: saturate(0.3) brightness(1.1) contrast(0.92); }
 .leaflet-control-zoom a   { background: var(--surface) !important; color: var(--text) !important; border-color: var(--border) !important; font-family: var(--font) !important; font-size: 18px !important; width: 42px !important; height: 42px !important; line-height: 42px !important; }
 .leaflet-control-zoom a:hover { background: var(--surface2) !important; }
 .leaflet-control-attribution { display: none !important; }
 .leaflet-control-zoom     { border: 1px solid var(--border) !important; border-radius: 14px !important; overflow: hidden; box-shadow: var(--shadow) !important; }
 
-/* Scrollbar */
 ::-webkit-scrollbar       { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-/* Animations */
 @keyframes spin      { to { transform: rotate(360deg); } }
 @keyframes fadeUp    { from { opacity:0; transform:translateX(-50%) translateY(14px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 @keyframes popIn     { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
 @keyframes slideUp   { from { transform:translateY(100%); } to { transform:translateY(0); } }
 @keyframes slideLeft { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
 
-/* Map labels */
 .map-label {
-  background: rgba(18,18,18,.8) !important;
+  background: rgba(22,20,26,.82) !important;
   border: none !important; border-radius: 5px !important;
   color: #fff !important; font-family: var(--font) !important;
   font-size: 11px !important; font-weight: 600 !important;
   padding: 3px 7px !important; white-space: nowrap !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,.25) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2) !important;
   pointer-events: none !important;
 }
 .map-label::before      { display: none !important; }
-.map-label-visited      { background: rgba(15,118,110,.88) !important; }
+.map-label-visited      { background: rgba(108,99,255,.88) !important; }
 
 button { -webkit-tap-highlight-color: transparent; font-family: var(--font); }
 @media (hover: none) and (pointer: coarse) { button { min-height: 44px; } }

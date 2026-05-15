@@ -18,7 +18,7 @@ function hl(text, q) {
   if (!q) return text
   const i = text.toLowerCase().indexOf(q.toLowerCase())
   if (i < 0) return text
-  return (<>{text.slice(0,i)}<mark style={{ background:'rgba(15,118,110,.18)', color:'var(--accent)', borderRadius:2, padding:'0 1px' }}>{text.slice(i,i+q.length)}</mark>{text.slice(i+q.length)}</>)
+  return (<>{text.slice(0,i)}<mark style={{ background:'rgba(15,118,110,.18)', color:lvl.color, borderRadius:2, padding:'0 1px' }}>{text.slice(i,i+q.length)}</mark>{text.slice(i+q.length)}</>)
 }
 
 // Tab pill button
