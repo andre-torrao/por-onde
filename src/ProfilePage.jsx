@@ -71,9 +71,9 @@ function RingChart({ pct, color, size=190 }) {
 }
 
 // ── Color picker ─────────────────────────────────────────────────────
-function ColorPicker() {
+function ColorPicker({ color }) {
   const { user, updateProfile } = useAuth()
-  const current = user?.markColor || '#6c63ff'
+  const current = color || user?.markColor || '#6c63ff'
   return (
     <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16, padding:'14px 16px', marginBottom:12 }}>
       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
@@ -100,7 +100,7 @@ function ColorPicker() {
 }
 
 // ── Explorer tab ─────────────────────────────────────────────────────
-function ExplorerTab({ visitedMun, visitedPar, idNameMap }) {
+function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
   const [sub, setSub] = useState('municipalities')
   const munCount = visitedMun.size, parCount = visitedPar.size
   const munPct = Math.round(munCount / TOTAL_MUN * 100)
@@ -110,8 +110,8 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap }) {
   const count   = isMun ? munCount : parCount
   const total   = isMun ? TOTAL_MUN : TOTAL_PAR
   const pct     = isMun ? munPct : parPct
-  const color   = isMun ? '#6c63ff' : '#4ea8de'
-  const bgColor = isMun ? '#f0efff' : '#eef7ff'
+  const ringColor = color
+  const bgColor = `${color}18`
   const lvl     = getLevel(munPct)
   const nextLvl = getNextLevel(munPct)
 
@@ -147,9 +147,9 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap }) {
       {/* Ring chart */}
       <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20, padding:'20px 16px 16px', marginBottom:14, display:'flex', flexDirection:'column', alignItems:'center', boxShadow:'0 4px 20px rgba(108,99,255,.08)' }}>
         <div style={{ position:'relative', width:190, height:190 }}>
-          <RingChart pct={pct} color={color} size={190}/>
+          <RingChart pct={pct} color={ringColor} size={190}/>
           <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-            <div style={{ fontSize:40, fontWeight:900, color, lineHeight:1 }}>{pct}%</div>
+            <div style={{ fontSize:40, fontWeight:900, color:ringColor, lineHeight:1 }}>{pct}%</div>
             <div style={{ fontSize:12, fontWeight:600, color:'var(--muted)', marginTop:3 }}>{isMun ? 'concelhos' : 'freguesias'}</div>
             <div style={{ fontSize:11, color:'var(--muted)', marginTop:2 }}>{count} de {total}</div>
           </div>
@@ -178,7 +178,7 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap }) {
         ) : (
           <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
             {lastVisited.map(({ name, id }) => (
-              <div key={id} style={{ padding:'6px 12px', borderRadius:20, background:bgColor, border:`1px solid ${color}30`, fontSize:12, fontWeight:600, color }}>
+              <div key={id} style={{ padding:'6px 12px', borderRadius:20, background:bgColor, border:`1px solid ${ringColor}30`, fontSize:12, fontWeight:600, color:ringColor }}>
                 {name}
               </div>
             ))}
@@ -190,14 +190,14 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap }) {
 }
 
 // ── Profile info tab ─────────────────────────────────────────────────
-function ProfileInfoTab({ user, onEditProfile }) {
+function ProfileInfoTab({ user, onEditProfile, color }) {
   const infoCards = [
-    { label:'Username',      value:user?.id,            color:'#6c63ff', bg:'#f0efff' },
-    { label:'Nome',          value:user?.displayName||'—', color:'#9b72cf', bg:'#f5f0ff' },
-    { label:'Email',         value:user?.email,         color:'#4ea8de', bg:'#eef7ff' },
-    { label:'País',          value:user?.country||'—',  color:'#f9a825', bg:'#fff8e1' },
-    { label:'Localidade',    value:user?.location||'—', color:'#ff6b6b', bg:'#fff1f1' },
-    { label:'Membro desde',  value:user?.joinedAt ? new Date(user.joinedAt).toLocaleDateString('pt-PT',{day:'numeric',month:'long',year:'numeric'}) : '—', color:'#43c59e', bg:'#edfdf7' },
+    { label:'Username',     value:user?.id },
+    { label:'Nome',         value:user?.displayName||'—' },
+    { label:'Email',        value:user?.email },
+    { label:'País',         value:user?.country||'—' },
+    { label:'Localidade',   value:user?.location||'—' },
+    { label:'Membro desde', value:user?.joinedAt ? new Date(user.joinedAt).toLocaleDateString('pt-PT',{day:'numeric',month:'long',year:'numeric'}) : '—' },
   ]
 
   return (
@@ -205,18 +205,18 @@ function ProfileInfoTab({ user, onEditProfile }) {
       {/* Info cards — 2 col grid */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
         {infoCards.map(f => (
-          <div key={f.label} style={{ background:'var(--surface)', border:`1px solid ${f.color}25`, borderRadius:16, padding:'13px 14px', borderTop:`3px solid ${f.color}`, boxShadow:`0 2px 12px ${f.color}12` }}>
-            <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', color:f.color, marginBottom:5 }}>{f.label}</div>
+          <div key={f.label} style={{ background:'var(--surface)', border:`1px solid ${color}20`, borderRadius:16, padding:'13px 14px', borderTop:`3px solid ${color}`, boxShadow:`0 2px 12px ${color}10` }}>
+            <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', color, marginBottom:5 }}>{f.label}</div>
             <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.value}</div>
           </div>
         ))}
       </div>
 
       {/* Color picker */}
-      <ColorPicker/>
+      <ColorPicker color={color}/>
 
       {/* Edit button */}
-      <button onClick={onEditProfile} style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px', borderRadius:14, border:'none', background:'var(--accent)', cursor:'pointer', width:'100%', boxShadow:'0 4px 16px rgba(108,99,255,.35)' }}>
+      <button onClick={onEditProfile} style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px', borderRadius:14, border:'none', background:color, cursor:'pointer', width:'100%', boxShadow:`0 4px 16px ${color}50` }}>
         <Edit3 size={15} color="#fff"/>
         <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}>Editar perfil</span>
         <ChevronLeft size={14} color="rgba(255,255,255,.7)" style={{ transform:'rotate(180deg)', marginLeft:'auto' }}/>
@@ -226,7 +226,7 @@ function ProfileInfoTab({ user, onEditProfile }) {
 }
 
 // ── Favorites tab ────────────────────────────────────────────────────
-function FavoritesTab({ user }) {
+function FavoritesTab({ user, color }) {
   const [favorites, setFavorites] = useState([])
   const [loading, setLoading]     = useState(true)
 
@@ -271,7 +271,7 @@ function FavoritesTab({ user }) {
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:14, fontWeight:600, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</div>
               <div style={{ fontSize:11, color:'var(--muted)', marginTop:3, display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ background:isMun?'#f0efff':'#eef7ff', color:isMun?'#6c63ff':'#4ea8de', padding:'2px 8px', borderRadius:6, fontWeight:700, fontSize:10 }}>
+                <span style={{ background:`${color}18`, color, padding:'2px 8px', borderRadius:6, fontWeight:700, fontSize:10 }}>
                   {isMun?'Concelho':'Freguesia'}
                 </span>
                 {new Date(f.addedAt).toLocaleDateString('pt-PT')}
@@ -288,7 +288,7 @@ function FavoritesTab({ user }) {
 }
 
 // ── Submissions tab ──────────────────────────────────────────────────
-function SubmissionsTab({ userId }) {
+function SubmissionsTab({ userId, color }) {
   const [submissions, setSubmissions] = useState([])
   useEffect(() => { if (userId) getSuggestionsForUser(userId).then(setSubmissions) }, [userId])
 
@@ -336,7 +336,7 @@ function SubmissionsTab({ userId }) {
 }
 
 // ── Edit profile panel ───────────────────────────────────────────────
-function EditProfilePanel({ user, onSaved }) {
+function EditProfilePanel({ user, onSaved, color }) {
   const { updatePhoto, updateProfile } = useAuth()
   const [fields, setFields] = useState({
     displayName: user?.displayName || user?.id || '',
@@ -439,7 +439,7 @@ function EditProfilePanel({ user, onSaved }) {
         <div style={{ fontSize:11, color:'var(--muted)', marginTop:4 }}>Mínimo 4 caracteres.</div>
       </div>
 
-      <button onClick={save} disabled={busy||saved} style={{ width:'100%', padding:'14px', borderRadius:14, border:'none', background:saved?'#43c59e':'var(--accent)', color:'#fff', fontSize:14, fontWeight:700, cursor:busy||saved?'default':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:20, boxShadow:saved?'none':'0 4px 20px rgba(108,99,255,.35)' }}>
+      <button onClick={save} disabled={busy||saved} style={{ width:'100%', padding:'14px', borderRadius:14, border:'none', background:saved?'#43c59e':color, color:'#fff', fontSize:14, fontWeight:700, cursor:busy||saved?'default':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:20, boxShadow:saved?'none':`0 4px 20px ${color}50` }}>
         {saved ? <><Check size={15}/> Guardado!</> : busy ? 'A guardar…' : 'Guardar alterações'}
       </button>
     </div>
@@ -453,6 +453,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
   const [editing, setEditing] = useState(false)
 
   const munPct = Math.round((visitedMun?.size||0) / TOTAL_MUN * 100)
+  const color  = user?.markColor || '#6c63ff'
   const lvl    = getLevel(munPct)
 
   const TABS = [
@@ -481,7 +482,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
 
       {/* Hero */}
       {!editing && (
-        <div style={{ background:`linear-gradient(140deg, ${lvl.color} 0%, ${lvl.color}bb 100%)`, padding:'18px 16px 20px', flexShrink:0, position:'relative', overflow:'hidden', boxShadow:`0 4px 20px ${lvl.color}40` }}>
+        <div style={{ background:`linear-gradient(140deg, ${color} 0%, ${color}bb 100%)`, padding:'18px 16px 20px', flexShrink:0, position:'relative', overflow:'hidden', boxShadow:`0 4px 20px ${color}40` }}>
           <div style={{ position:'absolute', right:-30, top:-30, width:110, height:110, borderRadius:'50%', background:'rgba(255,255,255,.1)' }}/>
           <div style={{ position:'absolute', right:20, bottom:-20, width:65, height:65, borderRadius:'50%', background:'rgba(255,255,255,.07)' }}/>
           <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative' }}>
@@ -510,9 +511,9 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               flex:1, padding:'10px 2px 9px', border:'none',
-              borderBottom:`2.5px solid ${tab===t.key?lvl.color:'transparent'}`,
+              borderBottom:`2.5px solid ${tab===t.key?color:'transparent'}`,
               background:'transparent',
-              color: tab===t.key ? lvl.color : 'var(--muted)',
+              color: tab===t.key ? color : 'var(--muted)',
               fontSize:11, fontWeight: tab===t.key?700:500,
               cursor:'pointer', whiteSpace:'nowrap', minWidth:70,
               transition:'all .15s',
@@ -524,12 +525,12 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
       {/* Content */}
       <div style={{ flex:1, overflowY:'auto' }}>
         {editing
-          ? <EditProfilePanel user={user} onSaved={() => setEditing(false)}/>
+          ? <EditProfilePanel user={user} onSaved={() => setEditing(false)} color={color}/>
           : <>
-              {tab==='explorer'    && <ExplorerTab visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap}/>}
-              {tab==='favorites'   && <FavoritesTab user={user}/>}
-              {tab==='suggestions' && <SubmissionsTab userId={user.id}/>}
-              {tab==='info'        && <ProfileInfoTab user={user} onEditProfile={() => setEditing(true)}/>}
+              {tab==='explorer'    && <ExplorerTab visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} color={color}/>}
+              {tab==='favorites'   && <FavoritesTab user={user} color={color}/>}
+              {tab==='suggestions' && <SubmissionsTab userId={user.id} color={color}/>}
+              {tab==='info'        && <ProfileInfoTab user={user} onEditProfile={() => setEditing(true)} color={color}/>}
             </>
         }
       </div>
