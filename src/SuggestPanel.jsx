@@ -81,7 +81,7 @@ export default function SuggestPanel({ locationId, locationName, onClose }) {
 
   return (
     <div
-      style={{ position:'fixed', inset:0, zIndex:3000, background:'rgba(28,26,22,.45)', backdropFilter:'blur(4px)', display:'flex', alignItems: isMobile?'flex-end':'center', justifyContent:'center', padding: isMobile?0:20 }}
+      style={{ position:'fixed', inset:0, zIndex:19999, background:'rgba(28,26,22,.45)', backdropFilter:'blur(4px)', display:'flex', alignItems: isMobile?'flex-end':'center', justifyContent:'center', padding: isMobile?0:20 }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div

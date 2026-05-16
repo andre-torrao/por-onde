@@ -32,6 +32,7 @@ export default function Tracker() {
   const [profile,     setProfile]     = useState(false)
   const [admin,       setAdmin]       = useState(false)
   const [suggest,     setSuggest]     = useState(null)
+  const [favorites,   setFavorites]   = useState([])
 
   const [pinnedCard, setPinnedCard]   = useState(false)
   const pinnedRef  = useRef(false)
@@ -44,12 +45,23 @@ export default function Tracker() {
   useEffect(() => {
     setVisitedMun(new Set(user?.visited_municipalities || []))
     setVisitedPar(new Set(user?.visited_parishes || []))
+    if (user?.supabaseId) {
+      import('./supabase').then(({ supabase }) => {
+        supabase.from('profiles').select('favorites').eq('id', user.supabaseId).single()
+          .then(({ data }) => setFavorites(data?.favorites || []))
+      })
+    }
   }, [user?.id])
 
   // On desktop, open sidebar by default
   useEffect(() => {
     if (!isMobile) setSidebar(true)
   }, [isMobile])
+
+  // Sync markColor to CSS variable for map labels
+  useEffect(() => {
+    document.documentElement.style.setProperty('--mark-color', markColor)
+  }, [markColor])
 
   const showToast = useCallback((msg, type) => {
     clearTimeout(toastRef.current)
@@ -183,9 +195,9 @@ export default function Tracker() {
         {/* Hamburger */}
         <button onClick={() => setSidebar(s => !s)} style={{
           width:38, height:38, borderRadius:10, border:'1px solid var(--border)',
-          background: sidebar ? 'var(--accent-bg)' : 'var(--surface2)',
+          background: sidebar ? `${markColor}18` : 'var(--surface2)',
           cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
-          color: sidebar ? 'var(--accent)' : 'var(--text)', flexShrink:0, fontSize:18,
+          color: sidebar ? markColor : 'var(--text)', flexShrink:0, fontSize:18,
         }}>☰</button>
 
         <img src="/logo.png" alt="PorOnde" style={{ height:28, width:'auto', flexShrink:0 }}/>
@@ -196,16 +208,16 @@ export default function Tracker() {
         <div style={{ display:'flex', gap:5 }}>
           <div style={{
             padding: isMobile ? '4px 8px' : '3px 9px', borderRadius:20,
-            background: level==='municipalities' ? 'var(--accent)' : 'var(--accent-bg)',
-            border:'1px solid rgba(212,80,10,.2)', fontSize:11,
-            color: level==='municipalities' ? '#fff' : 'var(--accent)', fontWeight:700,
+            background: level==='municipalities' ? markColor : `${markColor}18`,
+            border:`1px solid ${markColor}40`, fontSize:11,
+            color: level==='municipalities' ? '#fff' : markColor, fontWeight:700,
           }}>
             {munCount} {!isMobile && `concelho${munCount!==1?'s':''}`}
             {isMobile && <span style={{ fontSize:9, opacity:.8 }}> C</span>}
           </div>
           <div style={{
             padding: isMobile ? '4px 8px' : '3px 9px', borderRadius:20,
-            background: level==='parishes' ? 'var(--accent)' : 'var(--surface2)',
+            background: level==='parishes' ? markColor : 'var(--surface2)',
             border:'1px solid var(--border)', fontSize:11,
             color: level==='parishes' ? '#fff' : 'var(--muted)', fontWeight:500,
           }}>
@@ -292,6 +304,7 @@ export default function Tracker() {
             level={level}
             markColor={markColor}
             isMobile={isMobile}
+            favorites={favorites}
           />
 
           {/* Legend — smaller on mobile */}
@@ -303,7 +316,7 @@ export default function Tracker() {
               borderRadius:10, padding: isMobile ? '7px 10px' : '9px 13px',
               boxShadow:'0 2px 12px rgba(0,0,0,.08)',
             }}>
-              {[['var(--unvisited)','1px solid var(--unvisited-stroke)','Não visitado'],['var(--visited)','none','Visitado']].map(([bg,border,label]) => (
+              {[['var(--unvisited)','1px solid var(--unvisited-stroke)','Não visitado'],[markColor,'none','Visitado']].map(([bg,border,label]) => (
                 <div key={label} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:label==='Visitado'?0:4 }}>
                   <div style={{ width:10, height:10, borderRadius:3, background:bg, border }}/>
                   <span style={{ fontSize:10, color:'var(--muted)' }}>{label}</span>
@@ -332,7 +345,7 @@ export default function Tracker() {
               position:'absolute',
               bottom: isMobile ? 'calc(var(--safe-bottom) + 12px)' : 22,
               left:'50%', transform:'translateX(-50%)',
-              background: toast.type==='add' ? 'var(--accent)' : 'var(--text)',
+              background: toast.type==='add' ? markColor : 'var(--text)',
               color:'#fff', borderRadius:10, padding:'10px 20px',
               fontSize:13, fontWeight:600, zIndex:9000,
               boxShadow:'0 4px 18px rgba(0,0,0,.2)',

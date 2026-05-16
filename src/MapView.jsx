@@ -15,13 +15,34 @@ function hexDarken(hex, amount=0.25) {
   return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('')
 }
 
-function featureStyle(isVisited, isHovered, visitedColor='#0f766e') {
+function featureStyle(isVisited, isHovered, visitedColor='#6c63ff', isFav=false) {
   const dark = hexDarken(visitedColor, 0.22)
+  if (isFav && !isVisited) {
+    // Favorite but not yet visited — golden outline
+    return {
+      fillColor:   '#fef3c7',
+      fillOpacity: isHovered ? 0.6 : 0.35,
+      color:       '#f59e0b',
+      weight:      isHovered ? 2.5 : 2,
+      dashArray:   '5 3',
+    }
+  }
+  if (isFav && isVisited) {
+    // Favorite AND visited — visited color + golden glow outline
+    return {
+      fillColor:   visitedColor,
+      fillOpacity: isHovered ? 0.92 : 0.82,
+      color:       '#f59e0b',
+      weight:      isHovered ? 2.5 : 2,
+      dashArray:   null,
+    }
+  }
   return {
     fillColor:   isVisited ? visitedColor : '#d8d4ca',
     fillOpacity: isHovered ? 0.9 : isVisited ? 0.78 : 0.50,
     color:       isHovered ? dark : isVisited ? dark : '#a8a49a',
     weight:      isHovered ? 2.0 : isVisited ? 1.4 : 0.6,
+    dashArray:   null,
   }
 }
 
@@ -44,7 +65,7 @@ function getCenter(layer) {
   return null
 }
 
-const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onSelect, onReady, level, markColor, isMobile }, ref) {
+const MapView = forwardRef(function MapView({ visited, favorites, onToggle, onHover, onSelect, onReady, level, markColor, isMobile }, ref) {
   const elRef      = useRef(null)
   const mapRef     = useRef(null)
   const geoRef     = useRef(null)
@@ -57,10 +78,22 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onSele
   const highlightedRef = useRef(null)
   const isMobileRef   = useRef(isMobile)
   const selectedRef   = useRef(null)
+  const favoritesRef  = useRef(favorites || [])
 
   // Keep refs always current
   useEffect(() => { visitedRef.current = visited }, [visited])
   useEffect(() => { isMobileRef.current = isMobile }, [isMobile])
+
+  useEffect(() => {
+    const prev = favoritesRef.current || []
+    favoritesRef.current = favorites || []
+    // Re-style added/removed favorites
+    const allIds = new Set([...prev.map(f=>f.id), ...(favorites||[]).map(f=>f.id)])
+    allIds.forEach(id => {
+      const layer = layersRef.current[id]
+      if (layer) { const fav=(favorites||[]).some(f=>f.id===id); layer.setStyle(featureStyle(visitedRef.current.has(id), false, colorRef.current, fav)) }
+    })
+  }, [favorites])
   useEffect(() => {
     colorRef.current = markColor || '#0f766e'
     // Re-style all visited layers with new color
@@ -164,7 +197,7 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onSele
 
     const geo = L.geoJSON(dataset, {
       // IMPORTANT: style function uses visitedRef (always current) not the closed-over visited
-      style: f => featureStyle(visitedRef.current.has(makeId(f.properties)), false, colorRef.current),
+      style: f => { const id=makeId(f.properties); const fav=favoritesRef.current?.some(f=>f.id===id); return featureStyle(visitedRef.current.has(id), false, colorRef.current, fav) },
 
       onEachFeature(f, layer) {
         const id          = makeId(f.properties)
@@ -204,10 +237,10 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onSele
           layer.on('mouseover', e => {
             if (hoveredRef.current && hoveredRef.current !== layerId) {
               const prev = layersRef.current[hoveredRef.current]
-              if (prev) prev.setStyle(featureStyle(visitedRef.current.has(hoveredRef.current), false, colorRef.current))
+              if (prev) { const fav=favoritesRef.current?.some(f=>f.id===hoveredRef.current); prev.setStyle(featureStyle(visitedRef.current.has(hoveredRef.current), false, colorRef.current, fav)) }
             }
             hoveredRef.current = layerId
-            layer.setStyle(featureStyle(visitedRef.current.has(layerId), true, colorRef.current))
+            const isFavH=favoritesRef.current?.some(f=>f.id===layerId); layer.setStyle(featureStyle(visitedRef.current.has(layerId), true, colorRef.current, isFavH))
             onHover({
               name: layerDisplayName, rawName: name, concelho, id: layerId,
               isVisited: visitedRef.current.has(layerId),
@@ -219,7 +252,7 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onSele
           })
           layer.on('mouseout', () => {
             if (hoveredRef.current === layerId) hoveredRef.current = null
-            layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current))
+            const isFavL=favoritesRef.current?.some(f=>f.id===layerId); layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current, isFavL))
             onHover(null)
           })
           layer.on('click', () => onToggle(layerId, layerDisplayName))
@@ -236,17 +269,17 @@ const MapView = forwardRef(function MapView({ visited, onToggle, onHover, onSele
             if (alreadySelected) {
               // Second tap = mark as visited
               selectedRef.current = null
-              layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current))
+              const isFavL=favoritesRef.current?.some(f=>f.id===layerId); layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current, isFavL))
               onToggle(layerId, layerDisplayName)
             } else {
               // First tap = highlight + show card
               selectedRef.current = layerId
               layer.setStyle({
                 fillColor:   colorRef.current,
-                fillOpacity: 0.35,
+                fillOpacity: 0.4,
                 color:       colorRef.current,
-                weight:      3,
-                dashArray:   '5 4',
+                weight:      3.5,
+                dashArray:   '6 3',
               })
               onSelect({
                 name: layerDisplayName, rawName: name, concelho, id: layerId,
