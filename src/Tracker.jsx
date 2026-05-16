@@ -111,8 +111,12 @@ export default function Tracker() {
     }
   }, [isMobile])
 
-  // Mobile: first tap shows card with highlight (no toggle)
+  // Mobile: first tap shows card, null = deselect (close card)
   const handleSelect = useCallback((info) => {
+    if (!info) {
+      unpinCard()
+      return
+    }
     setTooltip({ ...info, isVisited: visited.has(info.id) })
     pinCard()
   }, [visited])
@@ -128,6 +132,7 @@ export default function Tracker() {
     pinnedRef.current = false
     setPinnedCard(false)
     setTooltip(null)
+    mapRef.current?.clearSelection?.()
   }, [])
 
   const handleSidebarToggle = useCallback((id, displayName) => {
@@ -310,8 +315,8 @@ export default function Tracker() {
           {/* Legend — smaller on mobile */}
           {!tooltip && (
             <div style={{
-              position:'absolute', bottom: isMobile ? 16 : 18,
-              right: isMobile ? 10 : 14, zIndex:800,
+              position:'absolute', bottom: isMobile ? 80 : 18,
+              right: isMobile ? 14 : 14, zIndex:800,
               background:'var(--surface)', border:'1px solid var(--border)',
               borderRadius:10, padding: isMobile ? '7px 10px' : '9px 13px',
               boxShadow:'0 2px 12px rgba(0,0,0,.08)',

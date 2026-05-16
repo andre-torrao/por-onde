@@ -119,10 +119,10 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, le
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
           style={{
-            background:'var(--surface)',
+            background:'#ffffff',
             borderRadius:'20px 20px 0 0',
-            boxShadow:'0 -4px 32px rgba(0,0,0,.2)',
-            border:'1px solid var(--border)',
+            boxShadow:`0 -4px 32px ${color}30, 0 -1px 0 ${color}20`,
+            border:`1px solid ${color}20`,
             borderBottom:'none',
             paddingBottom:'calc(var(--safe-bottom) + 8px)',
             animation:'slideUp .25s cubic-bezier(.4,0,.2,1)',
@@ -130,13 +130,13 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, le
         >
           {/* Drag handle */}
           <div style={{ display:'flex', justifyContent:'center', paddingTop:10, paddingBottom:4 }}>
-            <div style={{ width:32, height:4, borderRadius:2, background:'var(--border2)' }}/>
+            <div style={{ width:36, height:4, borderRadius:2, background:`${color}50` }}/>
           </div>
 
-          {/* Header row */}
+          {/* Header row — white bg, name in markColor */}
           <div style={{ padding:'8px 16px 0', display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontWeight:800, fontSize:16, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+              <div style={{ fontWeight:800, fontSize:17, color, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                 {name}
               </div>
               {concelho && concelho !== name && (
@@ -147,7 +147,7 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, le
             </div>
             {/* Visited badge */}
             {isVisited && (
-              <div style={{ background:color, color:'#fff', borderRadius:20, padding:'3px 10px', fontSize:11, fontWeight:700, flexShrink:0 }}>✓ Visitado</div>
+              <div style={{ background:`${color}18`, color, border:`1px solid ${color}40`, borderRadius:20, padding:'3px 10px', fontSize:11, fontWeight:700, flexShrink:0 }}>✓ Visitado</div>
             )}
             <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, border:'1px solid var(--border)', background:'var(--surface2)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
               <X size={13} color="var(--muted)"/>
@@ -193,7 +193,7 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, le
           {/* Expand toggle */}
           <button
             onClick={() => setExpanded(v => !v)}
-            style={{ width:'100%', padding:'6px', background:'var(--surface2)', border:'none', borderTop:'1px solid var(--border)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:5, color:'var(--muted)', fontSize:12, fontWeight:600 }}
+            style={{ width:'100%', padding:'7px', background:`${color}08`, border:'none', borderTop:`1px solid ${color}18`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:5, color, fontSize:12, fontWeight:600 }}
           >
             {expanded ? <><ChevronDown size={14}/> Menos info</> : <><ChevronUp size={14}/> Ver informação</>}
           </button>

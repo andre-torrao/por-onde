@@ -137,6 +137,16 @@ const MapView = forwardRef(function MapView({ visited, favorites, onToggle, onHo
   }, [visited])
 
   useImperativeHandle(ref, () => ({
+    clearSelection() {
+      if (selectedRef.current) {
+        const prev = layersRef.current[selectedRef.current]
+        if (prev) {
+          const pFav = favoritesRef.current?.some(f => f.id === selectedRef.current)
+          prev.setStyle(featureStyle(visitedRef.current.has(selectedRef.current), false, colorRef.current, pFav))
+        }
+        selectedRef.current = null
+      }
+    },
     zoomToId(id) {
       const layer = layersRef.current[id]
       const map   = mapRef.current
@@ -257,29 +267,37 @@ const MapView = forwardRef(function MapView({ visited, favorites, onToggle, onHo
           })
           layer.on('click', () => onToggle(layerId, layerDisplayName))
         } else {
-          // ── Mobile: first click = highlight + show card, second click = mark ──
+          // ── Mobile: first tap = highlight + show card, second tap = deselect ──
+          // Marking as visited only happens via the card button
           layer.on('click', e => {
             L.DomEvent.stopPropagation(e)
             const alreadySelected = selectedRef.current === layerId
-            // Clear previous selection highlight
+
+            // Clear previous selection highlight (different layer)
             if (selectedRef.current && selectedRef.current !== layerId) {
               const prev = layersRef.current[selectedRef.current]
-              if (prev) prev.setStyle(featureStyle(visitedRef.current.has(selectedRef.current), false, colorRef.current))
+              if (prev) {
+                const pFav = favoritesRef.current?.some(f => f.id === selectedRef.current)
+                prev.setStyle(featureStyle(visitedRef.current.has(selectedRef.current), false, colorRef.current, pFav))
+              }
             }
+
             if (alreadySelected) {
-              // Second tap = mark as visited
+              // Second tap on same = deselect, close card, restore style
               selectedRef.current = null
-              const isFavL=favoritesRef.current?.some(f=>f.id===layerId); layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current, isFavL))
-              onToggle(layerId, layerDisplayName)
+              const isFavL = favoritesRef.current?.some(f => f.id === layerId)
+              layer.setStyle(featureStyle(visitedRef.current.has(layerId), false, colorRef.current, isFavL))
+              // Signal close to Tracker (pass null)
+              onSelect(null)
             } else {
               // First tap = highlight + show card
               selectedRef.current = layerId
               layer.setStyle({
                 fillColor:   colorRef.current,
-                fillOpacity: 0.4,
+                fillOpacity: 0.45,
                 color:       colorRef.current,
                 weight:      3.5,
-                dashArray:   '6 3',
+                dashArray:   '5 3',
               })
               onSelect({
                 name: layerDisplayName, rawName: name, concelho, id: layerId,
