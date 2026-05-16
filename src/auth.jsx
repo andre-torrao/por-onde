@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
       photo:                  profile.photo_url || null,
       country:                profile.country || 'Portugal',
       location:               profile.location || '',
-      markColor:              profile.mark_color || '#0f766e',
+      markColor:              profile.mark_color || '#6c63ff',
       isAdmin:                profile.is_admin || false,
       approved:               profile.approved || false,
       joinedAt:               new Date(profile.joined_at).getTime(),
@@ -138,7 +138,10 @@ export function AuthProvider({ children }) {
 
   const updateProfile = useCallback(async (updates) => {
     const uid = userRef.current?.supabaseId
-    if (!uid) return
+    if (!uid) {
+      console.warn('updateProfile: no supabaseId found', userRef.current)
+      return
+    }
     // Optimistically update local state immediately
     setUser(prev => prev ? { ...prev, ...updates } : prev)
     // Map camelCase to snake_case for DB
@@ -149,8 +152,9 @@ export function AuthProvider({ children }) {
     if ('location'    in updates) dbUpdates.location     = updates.location
     if ('markColor'   in updates) dbUpdates.mark_color   = updates.markColor
     if (Object.keys(dbUpdates).length > 0) {
-      const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', uid)
-      if (error) console.error('updateProfile error:', error)
+      const { data, error } = await supabase.from('profiles').update(dbUpdates).eq('id', uid).select()
+      if (error) console.error('updateProfile DB error:', error)
+      else console.log('updateProfile saved:', dbUpdates, 'result:', data)
     }
   }, [])
 

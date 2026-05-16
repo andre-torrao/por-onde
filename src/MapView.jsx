@@ -85,13 +85,19 @@ const MapView = forwardRef(function MapView({ visited, favorites, onToggle, onHo
   useEffect(() => { isMobileRef.current = isMobile }, [isMobile])
 
   useEffect(() => {
-    const prev = favoritesRef.current || []
     favoritesRef.current = favorites || []
-    // Re-style added/removed favorites
-    const allIds = new Set([...prev.map(f=>f.id), ...(favorites||[]).map(f=>f.id)])
-    allIds.forEach(id => {
-      const layer = layersRef.current[id]
-      if (layer) { const fav=(favorites||[]).some(f=>f.id===id); layer.setStyle(featureStyle(visitedRef.current.has(id), false, colorRef.current, fav)) }
+    // Re-style all affected layers
+    const geo = geoRef.current
+    if (!geo) return
+    // Only re-style changed IDs for performance, but also check all fav IDs
+    const favIds = new Set((favorites||[]).map(f => f.id))
+    geo.eachLayer(layer => {
+      const id = layer._pid
+      if (!id) return
+      const isFav = favIds.has(id)
+      const isSelected = selectedRef.current === id
+      if (isSelected) return // don't override selection highlight
+      layer.setStyle(featureStyle(visitedRef.current.has(id), false, colorRef.current, isFav))
     })
   }, [favorites])
   useEffect(() => {
