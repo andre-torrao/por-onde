@@ -29,7 +29,7 @@ function SectionBlock({ icon, color, title, children, empty }) {
   )
 }
 
-export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, level, isMobile, onMouseEnter, onMouseLeave }) {
+export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, onFavoriteChange, level, isMobile, onMouseEnter, onMouseLeave }) {
   const { user } = useAuth()
   const [approved, setApproved] = useState([])
   const [isFav, setIsFav]       = useState(false)
@@ -70,6 +70,8 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, le
     }
     await supabase.from('profiles').update({ favorites: next }).eq('id', user.supabaseId)
     setIsFav(!isFav)
+    // Notify Tracker to refresh favorites in MapView
+    onFavoriteChange?.()
   }
 
   if (!tooltip) return null

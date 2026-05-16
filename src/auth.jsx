@@ -84,12 +84,18 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  // Use ref so saveVisited never has a stale closure on supabaseId
+  const userRef = useRef(null)
+  useEffect(() => { userRef.current = user }, [user])
+
   const saveVisited = useCallback(async (list, level) => {
-    if (!user?.supabaseId) return
+    const uid = userRef.current?.supabaseId
+    if (!uid) return
     const col = level === 'parishes' ? 'visited_parishes' : 'visited_municipalities'
-    await supabase.from('profiles').update({ [col]: list }).eq('id', user.supabaseId)
+    const { error } = await supabase.from('profiles').update({ [col]: list }).eq('id', uid)
+    if (error) console.error('saveVisited error:', error)
     setUser(prev => prev ? { ...prev, [col]: list } : prev)
-  }, [user?.supabaseId])
+  }, [])
 
   const updatePhoto = useCallback(async (photoDataUrl) => {
     if (!user?.supabaseId) return
@@ -131,7 +137,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const updateProfile = useCallback(async (updates) => {
-    if (!user?.supabaseId) return
+    const uid = userRef.current?.supabaseId
+    if (!uid) return
     // Optimistically update local state immediately
     setUser(prev => prev ? { ...prev, ...updates } : prev)
     // Map camelCase to snake_case for DB
@@ -142,9 +149,10 @@ export function AuthProvider({ children }) {
     if ('location'    in updates) dbUpdates.location     = updates.location
     if ('markColor'   in updates) dbUpdates.mark_color   = updates.markColor
     if (Object.keys(dbUpdates).length > 0) {
-      await supabase.from('profiles').update(dbUpdates).eq('id', user.supabaseId)
+      const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', uid)
+      if (error) console.error('updateProfile error:', error)
     }
-  }, [user?.supabaseId])
+  }, [])
 
   return (
     <Ctx.Provider value={{

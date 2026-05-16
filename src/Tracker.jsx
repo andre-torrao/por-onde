@@ -53,6 +53,15 @@ export default function Tracker() {
     }
   }, [user?.id])
 
+  // Reload favorites when needed (e.g. after InfoCard fav toggle)
+  const refreshFavorites = useCallback(() => {
+    if (!user?.supabaseId) return
+    import('./supabase').then(({ supabase }) => {
+      supabase.from('profiles').select('favorites').eq('id', user.supabaseId).single()
+        .then(({ data }) => setFavorites(data?.favorites || []))
+    })
+  }, [user?.supabaseId])
+
   // On desktop, open sidebar by default
   useEffect(() => {
     if (!isMobile) setSidebar(true)
@@ -337,6 +346,7 @@ export default function Tracker() {
               level={level}
               isMobile={isMobile}
               onToggle={(id, name) => { handleToggle(id, name); setTooltip(prev => prev ? { ...prev, isVisited: !visited.has(id) } : prev) }}
+              onFavoriteChange={refreshFavorites}
               onOpenSuggest={() => tooltip && setSuggest({ id: tooltip.id, name: tooltip.name })}
               onClose={handleCloseCard}
               onMouseEnter={handleCardEnter}
