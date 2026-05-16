@@ -90,10 +90,11 @@ export function AuthProvider({ children }) {
 
   const saveVisited = useCallback(async (list, level) => {
     const uid = userRef.current?.supabaseId
-    if (!uid) return
+    if (!uid) { console.warn('saveVisited: no uid', userRef.current); return }
     const col = level === 'parishes' ? 'visited_parishes' : 'visited_municipalities'
-    const { error } = await supabase.from('profiles').update({ [col]: list }).eq('id', uid)
+    const { data, error } = await supabase.from('profiles').update({ [col]: list }).eq('id', uid).select('id')
     if (error) console.error('saveVisited error:', error)
+    else console.log('saveVisited ok:', col, list.length, 'items')
     setUser(prev => prev ? { ...prev, [col]: list } : prev)
   }, [])
 
