@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from './auth'
 import { supabase } from './supabase'
 import { ChevronLeft, Camera, Check, Globe, Edit3, Eye, EyeOff, Star, Trash2, Home, MapPin, TrendingUp, Lock, Palette, X } from 'lucide-react'
+import PassportTab from './PassportTab'
 import idToNameData from './data/idToName.json'
 import { getSuggestionsForUser } from './storage'
 
@@ -434,6 +435,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
   const lvl=getLevel(munPct)
   const TABS=[
     {key:'explorer',   label:'Explorador'},
+    {key:'passport',   label:'Passaporte'},
     {key:'favorites',  label:'Favoritos'},
     {key:'suggestions',label:'Sugestões'},
     {key:'info',       label:'O Meu Perfil'},
@@ -471,6 +473,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
           ?<EditProfilePanel user={user} onSaved={()=>setEditing(false)} color={color}/>
           :<>
             {tab==='explorer'    &&<ExplorerTab visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} color={color}/>}
+            {tab==='passport'    &&<PassportTab visitedMun={visitedMun} color={color}/>}
             {tab==='favorites'   &&<FavoritesTab user={user} color={color}/>}
             {tab==='suggestions' &&<SubmissionsTab userId={user.id} color={color}/>}
             {tab==='info'        &&<ProfileInfoTab user={user} onEditProfile={()=>setEditing(true)} color={color}/>}
