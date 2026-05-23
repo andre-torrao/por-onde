@@ -90,11 +90,10 @@ export function AuthProvider({ children }) {
 
   const saveVisited = useCallback(async (list, level) => {
     const uid = userRef.current?.supabaseId
-    if (!uid) { console.warn('saveVisited: no uid', userRef.current); return }
+    if (!uid) return
     const col = level === 'parishes' ? 'visited_parishes' : 'visited_municipalities'
     const { data, error } = await supabase.from('profiles').update({ [col]: list }).eq('id', uid).select('id')
     if (error) console.error('saveVisited error:', error)
-    else console.log('saveVisited ok:', col, list.length, 'items')
     setUser(prev => prev ? { ...prev, [col]: list } : prev)
   }, [])
 
@@ -140,7 +139,6 @@ export function AuthProvider({ children }) {
   const updateProfile = useCallback(async (updates) => {
     const uid = userRef.current?.supabaseId
     if (!uid) {
-      console.warn('updateProfile: no supabaseId found', userRef.current)
       return
     }
     // Optimistically update local state immediately
@@ -154,8 +152,7 @@ export function AuthProvider({ children }) {
     if ('markColor'   in updates) dbUpdates.mark_color   = updates.markColor
     if (Object.keys(dbUpdates).length > 0) {
       const { data, error } = await supabase.from('profiles').update(dbUpdates).eq('id', uid).select()
-      if (error) console.error('updateProfile DB error:', error)
-      else console.log('updateProfile saved:', dbUpdates, 'result:', data)
+      if (error) console.error('updateProfile error:', error)
     }
   }, [])
 
