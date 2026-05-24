@@ -69,14 +69,7 @@ function EntryRow({ id, displayName, concelho, isVisited, q, accentColor, onView
         <ChevronRight size={14}/>
       </div>
 
-      {isVisited && (
-        <button
-          onClick={e => { e.stopPropagation(); onRemove(id, displayName) }}
-          style={{ background:'none', border:'none', cursor:'pointer', color:'var(--border2)', display:'flex', padding:'2px', borderRadius:6, flexShrink:0 }}
-        >
-          <X size={13}/>
-        </button>
-      )}
+
     </div>
   )
 }

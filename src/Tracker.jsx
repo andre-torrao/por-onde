@@ -55,25 +55,28 @@ export default function Tracker() {
 
   // Called from PassportTab when user clicks a stamp — shows InfoCard
   const handleStampClick = useCallback((slug, name) => {
-    // Find the map ID for this slug from idNameMap
+    // Robust matching — try multiple ID formats
+    const s = slug.toLowerCase().replace(/-/g, '')
     let found = null
+
     for (const [id, val] of idNameMap.entries()) {
-      const idSlug = id.split('__')[0].toLowerCase()
-      const s = slug.toLowerCase()
-      if (idSlug === s || idSlug.replace(/-/g,'') === s.replace(/-/g,'')) {
+      const raw = id.split('__')[0].toLowerCase().replace(/-/g, '')
+      if (raw === s) {
         const displayName = typeof val === 'string' ? val : val?.displayName || val?.name || name
         found = { id, name: displayName, concelho: typeof val === 'object' ? val.concelho || '' : '' }
         break
       }
     }
-    if (found) {
-      // Zoom map and show card
-      mapRef.current?.zoomToId(found.id)
-      setTooltip({ ...found, isVisited: visited.has(found.id), x: 180, y: 300 })
-      pinCard()
-      // Close profile page to show map
-      setProfile(false)
-    }
+
+    // Close profile first, then show card after render
+    setProfile(false)
+    setTimeout(() => {
+      if (found) {
+        mapRef.current?.zoomToId(found.id)
+        setTooltip({ ...found, isVisited: visited.has(found.id), x: window.innerWidth / 2, y: 300 })
+        pinCard()
+      }
+    }, 100)
   }, [idNameMap, visited])
 
   // Reload favorites when needed (e.g. after InfoCard fav toggle)

@@ -103,10 +103,15 @@ function RouteCard({ route, checks, visitedMun, onToggle, onStampClick }) {
   const [open, setOpen] = useState(false)
 
   function isVisitedInMap(slug) {
+    const s = slug.toLowerCase().replace(/-/g,'').replace(/\s/g,'')
     return [...visitedMun].some(id => {
-      const idSlug = id.split('__')[0].toLowerCase()
-      const s = slug.toLowerCase()
-      return idSlug===s || idSlug.replace(/-/g,'')===s.replace(/-/g,'')
+      // IDs are like "ref__sintra", "sintra__42", "sao-pedro-do-sul__88"
+      const raw = id.split('__')[0].toLowerCase()
+        .replace(/^ref__/, '')
+        .replace(/-/g,'').replace(/\s/g,'')
+        // handle accents loosely
+      return raw === s ||
+        raw.normalize('NFD').replace(/[̀-ͯ]/g,'') === s.normalize('NFD').replace(/[̀-ͯ]/g,'')
     })
   }
 
@@ -218,9 +223,10 @@ export default function PassportTab({ visitedMun, color, onStampClick }) {
 
   function getRoutePct(route) {
     const done = route.municipalities.filter(item => {
+      const s = item.slug.toLowerCase().replace(/-/g,'')
       const vis = [...visitedMun].some(id => {
-        const idSlug = id.split('__')[0].toLowerCase()
-        return idSlug===item.slug||idSlug.replace(/-/g,'')===item.slug.replace(/-/g,'')
+        const raw = id.split('__')[0].toLowerCase().replace(/-/g,'').replace(/^ref__/,'')
+        return raw === s
       })
       return vis||!!checks[`${route.id}__${item.slug}`]
     }).length
