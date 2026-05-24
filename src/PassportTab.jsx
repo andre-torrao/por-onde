@@ -5,14 +5,17 @@ import { ROUTES } from './data/routes'
 import { ChevronDown, MapPin, ExternalLink, Lock, Info } from 'lucide-react'
 
 // ── Stamp item ────────────────────────────────────────────────────────
-function StampItem({ item, done, isVisitedOnMap, color, onStampClick, routeId }) {
+function StampItem({ item, done, isVisitedOnMap, color, onToggle, onStampClick, routeId }) {
   const hasStamp = !!item.stamp
   const [pressed, setPressed] = useState(false)
 
   function handleClick() {
     setPressed(true)
     setTimeout(() => setPressed(false), 200)
-    onStampClick?.(item.slug, item.name, routeId)
+    // Just toggle the check - don't jump to map
+    if (!isVisitedOnMap) {
+      onToggle?.(item.slug)
+    }
   }
 
   return (
@@ -102,17 +105,15 @@ function RouteMap({ route }) {
 function RouteCard({ route, checks, visitedMun, onToggle, onStampClick }) {
   const [open, setOpen] = useState(false)
 
+  function extractMapName(id) {
+    // "ref__sintra"->sintra, "sintra__42"->sintra
+    const parts = id.split('__')
+    const name = parts[0] === 'ref' ? parts[1] : parts[0]
+    return name.toLowerCase().replace(/-/g,'').replace(/\s/g,'')
+  }
   function isVisitedInMap(slug) {
     const s = slug.toLowerCase().replace(/-/g,'').replace(/\s/g,'')
-    return [...visitedMun].some(id => {
-      // IDs are like "ref__sintra", "sintra__42", "sao-pedro-do-sul__88"
-      const raw = id.split('__')[0].toLowerCase()
-        .replace(/^ref__/, '')
-        .replace(/-/g,'').replace(/\s/g,'')
-        // handle accents loosely
-      return raw === s ||
-        raw.normalize('NFD').replace(/[̀-ͯ]/g,'') === s.normalize('NFD').replace(/[̀-ͯ]/g,'')
-    })
+    return [...visitedMun].some(id => extractMapName(id) === s)
   }
 
   const items = route.municipalities
@@ -182,6 +183,7 @@ function RouteCard({ route, checks, visitedMun, onToggle, onStampClick }) {
                     isVisitedOnMap={visitedOnMap}
                     color={route.color}
                     routeId={route.id}
+                    onToggle={(slug) => onToggle(route.id, slug)}
                     onStampClick={onStampClick}
                   />
                 )
