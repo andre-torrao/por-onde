@@ -138,12 +138,12 @@ export function AuthProvider({ children }) {
 
   const updateProfile = useCallback(async (updates) => {
     const uid = userRef.current?.supabaseId
-    if (!uid) {
-      return
-    }
-    // Optimistically update local state immediately
+    if (!uid) return
+
+    // Update local state INSTANTLY — no waiting for DB
     setUser(prev => prev ? { ...prev, ...updates } : prev)
-    // Map camelCase to snake_case for DB
+
+    // Fire-and-forget DB update (don't await in the critical path)
     const dbUpdates = {}
     if ('displayName' in updates) dbUpdates.display_name = updates.displayName
     if ('fullName'    in updates) dbUpdates.full_name    = updates.fullName
@@ -151,8 +151,8 @@ export function AuthProvider({ children }) {
     if ('location'    in updates) dbUpdates.location     = updates.location
     if ('markColor'   in updates) dbUpdates.mark_color   = updates.markColor
     if (Object.keys(dbUpdates).length > 0) {
-      const { data, error } = await supabase.from('profiles').update(dbUpdates).eq('id', uid).select()
-      if (error) console.error('updateProfile error:', error)
+      supabase.from('profiles').update(dbUpdates).eq('id', uid)
+        .then(({ error }) => { if (error) console.error('updateProfile error:', error) })
     }
   }, [])
 

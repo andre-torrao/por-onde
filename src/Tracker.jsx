@@ -19,7 +19,7 @@ function useIsMobile() {
 
 export default function Tracker() {
   const { user, saveVisited } = useAuth()
-  const markColor = user?.markColor || '#0f766e'
+  const markColor = user?.markColor || '#6c63ff'
   const isMobile = useIsMobile()
 
   const [visitedMun,  setVisitedMun]  = useState(() => new Set(user?.visited_municipalities || []))

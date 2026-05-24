@@ -71,10 +71,10 @@ function ColorPicker({ color: currentColor }) {
         {MARK_COLORS.map(hex => {
           const selected = cur === hex
           return (
-            <button key={hex} onClick={async () => {
-              console.log('ColorPicker: selecting', hex)
-              await updateProfile({ markColor: hex })
-              console.log('ColorPicker: done')
+            <button key={hex} onClick={() => {
+              // Update CSS var instantly for immediate visual feedback
+              document.documentElement.style.setProperty('--mark-color', hex)
+              updateProfile({ markColor: hex })
             }} style={{
               width:36, height:36, borderRadius:10, background:hex, border:'none',
               cursor:'pointer', position:'relative', flexShrink:0, transition:'transform .15s, box-shadow .15s',
