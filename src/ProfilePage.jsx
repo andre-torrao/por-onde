@@ -426,7 +426,7 @@ function EditProfilePanel({ user, onSaved, color }) {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────
-export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, onClose }) {
+export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, onClose, onStampClick }) {
   const {user,logout}=useAuth()
   const [tab,setTab]=useState('explorer')
   const [editing,setEditing]=useState(false)
@@ -473,7 +473,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
           ?<EditProfilePanel user={user} onSaved={()=>setEditing(false)} color={color}/>
           :<>
             {tab==='explorer'    &&<ExplorerTab visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} color={color}/>}
-            {tab==='passport'    &&<PassportTab visitedMun={visitedMun} color={color}/>}
+            {tab==='passport'    &&<PassportTab visitedMun={visitedMun} color={color} onStampClick={onStampClick}/>}
             {tab==='favorites'   &&<FavoritesTab user={user} color={color}/>}
             {tab==='suggestions' &&<SubmissionsTab userId={user.id} color={color}/>}
             {tab==='info'        &&<ProfileInfoTab user={user} onEditProfile={()=>setEditing(true)} color={color}/>}

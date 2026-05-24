@@ -53,6 +53,29 @@ export default function Tracker() {
     }
   }, [user?.id])
 
+  // Called from PassportTab when user clicks a stamp — shows InfoCard
+  const handleStampClick = useCallback((slug, name) => {
+    // Find the map ID for this slug from idNameMap
+    let found = null
+    for (const [id, val] of idNameMap.entries()) {
+      const idSlug = id.split('__')[0].toLowerCase()
+      const s = slug.toLowerCase()
+      if (idSlug === s || idSlug.replace(/-/g,'') === s.replace(/-/g,'')) {
+        const displayName = typeof val === 'string' ? val : val?.displayName || val?.name || name
+        found = { id, name: displayName, concelho: typeof val === 'object' ? val.concelho || '' : '' }
+        break
+      }
+    }
+    if (found) {
+      // Zoom map and show card
+      mapRef.current?.zoomToId(found.id)
+      setTooltip({ ...found, isVisited: visited.has(found.id), x: 180, y: 300 })
+      pinCard()
+      // Close profile page to show map
+      setProfile(false)
+    }
+  }, [idNameMap, visited])
+
   // Reload favorites when needed (e.g. after InfoCard fav toggle)
   const refreshFavorites = useCallback(() => {
     if (!user?.supabaseId) return
@@ -372,7 +395,7 @@ export default function Tracker() {
         </div>
       </div>
 
-      {profile && <ProfilePage visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} level={level} onClose={() => setProfile(false)}/>}
+      {profile && <ProfilePage visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} level={level} onClose={() => setProfile(false)} onStampClick={handleStampClick}/>}
       {admin && user?.isAdmin && <AdminPage onClose={() => setAdmin(false)}/>}
       {suggest && <SuggestPanel locationId={suggest.id} locationName={suggest.name} onClose={() => setSuggest(null)}/>}
     </div>
