@@ -74,7 +74,7 @@ const MapView = forwardRef(function MapView({ visited, favorites, onToggle, onHo
   const idNamesRef = useRef({})   // id → displayName (for labels)
   const hoveredRef = useRef(null)
   const visitedRef    = useRef(visited)
-  const colorRef      = useRef(markColor || '#0f766e')
+  const colorRef      = useRef(markColor || '#6c63ff')
   const highlightedRef = useRef(null)
   const isMobileRef   = useRef(isMobile)
   const selectedRef   = useRef(null)
@@ -101,13 +101,15 @@ const MapView = forwardRef(function MapView({ visited, favorites, onToggle, onHo
     })
   }, [favorites])
   useEffect(() => {
-    colorRef.current = markColor || '#0f766e'
-    // Re-style all visited layers with new color
+    colorRef.current = markColor || '#6c63ff'
     const geo = geoRef.current
     if (!geo) return
     geo.eachLayer(layer => {
       const id = layer._pid
-      if (id) layer.setStyle(featureStyle(visitedRef.current.has(id), false, colorRef.current))
+      if (!id) return
+      if (selectedRef.current === id) return // don't override selection
+      const isFav = favoritesRef.current?.some(f => f.id === id)
+      layer.setStyle(featureStyle(visitedRef.current.has(id), false, colorRef.current, isFav))
     })
   }, [markColor])
 

@@ -225,8 +225,9 @@ export default function PassportTab({ visitedMun, color, onStampClick }) {
     const done = route.municipalities.filter(item => {
       const s = item.slug.toLowerCase().replace(/-/g,'')
       const vis = [...visitedMun].some(id => {
-        const raw = id.split('__')[0].toLowerCase().replace(/-/g,'').replace(/^ref__/,'')
-        return raw === s
+        const parts = id.split('__')
+        const name = (parts[0] === 'ref' ? parts[1] : parts[0]).toLowerCase().replace(/-/g,'')
+        return name === s
       })
       return vis||!!checks[`${route.id}__${item.slug}`]
     }).length
