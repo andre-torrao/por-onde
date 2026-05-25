@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { supabase } from './supabase'
 
 const Ctx = createContext(null)
@@ -156,12 +156,15 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const ctxValue = useMemo(() => ({
+    user, ready, login, register, logout,
+    saveVisited, updatePhoto, updateProfile, getAllUsers,
+    setUserApproved, deleteUser, resetPassword,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [user, ready])
+
   return (
-    <Ctx.Provider value={{
-      user, ready, login, register, logout,
-      saveVisited, updatePhoto, updateProfile, getAllUsers,
-      setUserApproved, deleteUser, resetPassword,
-    }}>
+    <Ctx.Provider value={ctxValue}>
       {children}
     </Ctx.Provider>
   )
