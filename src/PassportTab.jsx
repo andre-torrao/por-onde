@@ -126,31 +126,46 @@ function RouteCard({ route, checks, visitedMun, onToggle, onStampClick }) {
   return (
     <div style={{ background:'var(--surface)', borderRadius:20, marginBottom:14, border:`1.5px solid ${done?route.color:'var(--border)'}`, overflow:'hidden', boxShadow:done?`0 4px 24px ${route.color}30`:'0 2px 8px rgba(0,0,0,.04)', transition:'all .2s' }}>
       {/* Header */}
-      <div onClick={()=>setOpen(v=>!v)} style={{ padding:'16px', cursor:'pointer', display:'flex', gap:14, alignItems:'center', background:`linear-gradient(135deg,${route.color}12,${route.color}05)` }}>
-        {/* Progress ring */}
-        <div style={{ position:'relative', flexShrink:0, width:64, height:64 }}>
-          <svg width={64} height={64} viewBox="0 0 64 64">
-            <circle cx={32} cy={32} r={28} fill="none" stroke="var(--border)" strokeWidth={5}/>
-            <circle cx={32} cy={32} r={28} fill={done?`${route.color}15`:'none'} stroke={route.color} strokeWidth={5}
-              strokeDasharray={`${pct/100*176} 176`} strokeLinecap="round" transform="rotate(-90 32 32)" style={{ transition:'stroke-dasharray .6s' }}/>
-            {done
-              ? <text x={32} y={37} textAnchor="middle" fontSize={22} fill={route.color} fontFamily="serif" fontWeight={900}>✓</text>
-              : <text x={32} y={37} textAnchor="middle" fontSize={13} fill={route.color} fontFamily="serif" fontWeight={800}>{pct}%</text>
-            }
-          </svg>
-        </div>
-        <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontSize:15, fontWeight:800, color:'var(--text)', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{route.name}</div>
-          <div style={{ fontSize:11, color:'var(--muted)', marginBottom:8 }}>{route.subtitle}</div>
-          <div style={{ height:4, background:'var(--border)', borderRadius:2, overflow:'hidden', marginBottom:3 }}>
-            <div style={{ height:'100%', width:`${pct}%`, background:route.color, borderRadius:2, transition:'width .6s' }}/>
+      <div onClick={()=>setOpen(v=>!v)} style={{ cursor:'pointer' }}>
+        {/* Cover image if available */}
+        {route.cover && (
+          <div style={{ position:'relative', height:110, overflow:'hidden', borderRadius:'18px 18px 0 0' }}>
+            <img src={route.cover} alt={route.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+            <div style={{ position:'absolute', inset:0, background:`linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.65))` }}/>
+            <div style={{ position:'absolute', bottom:10, left:14, right:40 }}>
+              <div style={{ fontSize:16, fontWeight:900, color:'#fff', textShadow:'0 1px 4px rgba(0,0,0,.5)' }}>{route.name}</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,.75)', marginTop:2 }}>{route.subtitle}</div>
+            </div>
+            <ChevronDown size={16} style={{ position:'absolute', bottom:14, right:14, color:'rgba(255,255,255,.8)', transform:open?'rotate(180deg)':'none', transition:'transform .2s' }}/>
           </div>
-          <div style={{ fontSize:11, color:'var(--muted)', display:'flex', justifyContent:'space-between' }}>
-            <span style={{ color:done?route.color:'inherit', fontWeight:done?700:400 }}>{done?'Rota completa!':`${completedCount} de ${total}`}</span>
-            <span>{pct}%</span>
+        )}
+        <div style={{ padding: route.cover ? '10px 16px 12px' : '16px', display:'flex', gap:14, alignItems:'center', background:`linear-gradient(135deg,${route.color}12,${route.color}05)`, borderRadius: route.cover ? 0 : undefined }}>
+          {!route.cover && (
+            <div style={{ position:'relative', flexShrink:0, width:64, height:64 }}>
+              <svg width={64} height={64} viewBox="0 0 64 64">
+                <circle cx={32} cy={32} r={28} fill="none" stroke="var(--border)" strokeWidth={5}/>
+                <circle cx={32} cy={32} r={28} fill={done?`${route.color}15`:'none'} stroke={route.color} strokeWidth={5}
+                  strokeDasharray={`${pct/100*176} 176`} strokeLinecap="round" transform="rotate(-90 32 32)" style={{ transition:'stroke-dasharray .6s' }}/>
+                {done
+                  ? <text x={32} y={37} textAnchor="middle" fontSize={22} fill={route.color} fontFamily="serif" fontWeight={900}>✓</text>
+                  : <text x={32} y={37} textAnchor="middle" fontSize={13} fill={route.color} fontFamily="serif" fontWeight={800}>{pct}%</text>
+                }
+              </svg>
+            </div>
+          )}
+          <div style={{ flex:1, minWidth:0 }}>
+            {!route.cover && <div style={{ fontSize:15, fontWeight:800, color:'var(--text)', marginBottom:2 }}>{route.name}</div>}
+            {!route.cover && <div style={{ fontSize:11, color:'var(--muted)', marginBottom:8 }}>{route.subtitle}</div>}
+            <div style={{ height:4, background:'var(--border)', borderRadius:2, overflow:'hidden', marginBottom:3 }}>
+              <div style={{ height:'100%', width:`${pct}%`, background:route.color, borderRadius:2, transition:'width .6s' }}/>
+            </div>
+            <div style={{ fontSize:11, color:'var(--muted)', display:'flex', justifyContent:'space-between' }}>
+              <span style={{ color:done?route.color:'inherit', fontWeight:done?700:400 }}>{done?'Rota completa!':`${completedCount} de ${total}`}</span>
+              <span>{pct}%</span>
+            </div>
           </div>
+          {!route.cover && <ChevronDown size={16} style={{ color:'var(--muted)', transform:open?'rotate(180deg)':'none', transition:'transform .2s', flexShrink:0 }}/>}
         </div>
-        <ChevronDown size={16} style={{ color:'var(--muted)', transform:open?'rotate(180deg)':'none', transition:'transform .2s', flexShrink:0 }}/>
       </div>
 
       {open && (
