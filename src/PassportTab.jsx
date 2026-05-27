@@ -114,28 +114,20 @@ function RouteDetail({ route, checks, visitedMun, onToggle, onBack, color }) {
         </div>
       </div>
 
-      {/* Hero — cover or gradient */}
-      {route.cover ? (
-        <div style={{ position:'relative', height:180, flexShrink:0, overflow:'hidden' }}>
-          <img src={route.cover} alt={route.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.7))' }}/>
-          <div style={{ position:'absolute', bottom:14, left:16, right:16 }}>
-            <div style={{ fontSize:11, color:'rgba(255,255,255,.7)', fontWeight:600, textTransform:'uppercase', letterSpacing:'1.5px', marginBottom:3 }}>{route.subtitle}</div>
-            <div style={{ height:4, background:'rgba(255,255,255,.25)', borderRadius:2, overflow:'hidden' }}>
-              <div style={{ height:'100%', width:`${pct}%`, background:'rgba(255,255,255,.85)', borderRadius:2, transition:'width .8s' }}/>
-            </div>
-            <div style={{ fontSize:11, color:'rgba(255,255,255,.65)', marginTop:4 }}>{completedCount} de {total} visitados</div>
+      {/* Hero banner — colored strip with route name */}
+      <div style={{ background:`linear-gradient(135deg, ${route.color}, ${route.color}cc)`, padding:'16px 18px 18px', flexShrink:0, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', right:-20, top:-20, width:90, height:90, borderRadius:'50%', background:'rgba(255,255,255,.08)' }}/>
+        <div style={{ position:'relative' }}>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,.65)', fontWeight:600, textTransform:'uppercase', letterSpacing:'1.5px', marginBottom:4 }}>{route.subtitle}</div>
+          <div style={{ height:5, background:'rgba(255,255,255,.2)', borderRadius:3, overflow:'hidden', marginBottom:5 }}>
+            <div style={{ height:'100%', width:`${pct}%`, background:'rgba(255,255,255,.85)', borderRadius:3, transition:'width .8s' }}/>
+          </div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,.7)', display:'flex', justifyContent:'space-between' }}>
+            <span>{completedCount} de {total} visitados</span>
+            <span style={{ fontWeight:700 }}>{pct}%</span>
           </div>
         </div>
-      ) : (
-        <div style={{ background:`linear-gradient(135deg,${route.color},${route.color}99)`, padding:'16px', flexShrink:0 }}>
-          <div style={{ fontSize:13, color:'rgba(255,255,255,.75)', marginBottom:8 }}>{route.subtitle}</div>
-          <div style={{ height:5, background:'rgba(255,255,255,.2)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ height:'100%', width:`${pct}%`, background:'rgba(255,255,255,.85)', borderRadius:3 }}/>
-          </div>
-          <div style={{ fontSize:11, color:'rgba(255,255,255,.6)', marginTop:4 }}>{completedCount} de {total} visitados</div>
-        </div>
-      )}
+      </div>
 
       {/* Content */}
       <div style={{ flex:1, overflowY:'auto', padding:'14px 16px 80px' }}>
@@ -188,10 +180,11 @@ function PassportCover({ routes, getRoutePct, onSelectRoute }) {
               boxShadow: done ? `0 4px 20px ${route.color}40` : '0 2px 8px rgba(0,0,0,.06)',
               transition:'all .2s',
               aspectRatio: '3/4',
+              display:'block', width:'100%',
             }}>
-              {/* Cover image */}
+              {/* Cover image — fills entire card */}
               {route.cover ? (
-                <img src={route.cover} alt={route.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
+                <img src={route.cover} alt={route.name} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
               ) : (
                 <div style={{ width:'100%', height:'100%', background:`linear-gradient(145deg,${route.color},${route.color}88)`, display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <span style={{ fontSize:32, fontWeight:900, color:'rgba(255,255,255,.3)' }}>{route.shortName}</span>
