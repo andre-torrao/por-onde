@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from './auth'
 import { supabase } from './supabase'
-import { ChevronLeft, Camera, Check, Globe, Edit3, Eye, EyeOff, Star, Trash2, Home, MapPin, TrendingUp, Lock, Palette, X } from 'lucide-react'
-import PassportTab from './PassportTab'
+import { ChevronLeft, Camera, Check, Globe, Edit3, Eye, EyeOff, Star, Trash2, Home, User, MapPin, TrendingUp, Lock, Palette, Map, BookOpen } from 'lucide-react'
 import idToNameData from './data/idToName.json'
 import { getSuggestionsForUser } from './storage'
+import PassportTab from './PassportTab'
 
 const TOTAL_MUN = 307, TOTAL_PAR = 2916
 
@@ -22,71 +22,59 @@ function getLevel(pct)     { return [...LEVELS].reverse().find(l => pct >= l.min
 function getNextLevel(pct) { return LEVELS.find(l => pct < l.min) || null }
 
 const MARK_COLORS = [
-  '#85A898','#F5E2B0','#135768','#5270A1','#2D3D6E','#EDC366',
-  '#11406B','#30608C','#F2D230','#DB750F','#E0639F','#FF8C8E',
-  '#C44F88','#631662','#1C244F',
+  '#6c63ff','#ff6b6b','#43c59e','#f9a825','#4ea8de','#f06292',
+  '#85A898','#135768','#5270A1','#EDC366','#DB750F','#C44F88',
+  '#631662','#1C244F','#30608C',
 ]
 
-const CATS = [
-  { key:'visit', label:'Visitar',    color:'#ff6b6b' },
-  { key:'food',  label:'Gastronomia',color:'#4ea8de' },
-  { key:'sweet', label:'Doçaria',    color:'#9b72cf' },
-  { key:'fest',  label:'Evento',     color:'#43c59e' },
-  { key:'other', label:'Outro',      color:'#6b7694' },
-]
 const COUNTRIES = ['Portugal','Brasil','Angola','Moçambique','Cabo Verde','Guiné-Bissau','Espanha','França','Reino Unido','Alemanha','Suíça','Estados Unidos','Canadá','Outro']
+const CATS = [
+  { key:'visit', label:'Visitar',     color:'#ff6b6b' },
+  { key:'food',  label:'Gastronomia', color:'#4ea8de' },
+  { key:'sweet', label:'Doçaria',     color:'#9b72cf' },
+  { key:'fest',  label:'Evento',      color:'#43c59e' },
+  { key:'other', label:'Outro',       color:'#6b7694' },
+]
+
+// ── Hexagon button ────────────────────────────────────────────────────
+function HexButton({ icon, label, active, color, onClick }) {
+  return (
+    <button onClick={onClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', padding:'4px 0' }}>
+      <div style={{ position:'relative', width:54, height:62 }}>
+        <svg viewBox="0 0 54 62" width="54" height="62" style={{ position:'absolute', inset:0 }}>
+          <polygon points="27,2 52,15 52,47 27,60 2,47 2,15"
+            fill={active ? color : 'rgba(255,255,255,0.12)'}
+            stroke={active ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.25)'}
+            strokeWidth="1.5"
+          />
+        </svg>
+        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color: active ? '#fff' : 'rgba(255,255,255,0.6)' }}>
+          {icon}
+        </div>
+      </div>
+      <span style={{ fontSize:10, fontWeight: active ? 700 : 500, color: active ? '#fff' : 'rgba(255,255,255,0.6)', textTransform:'uppercase', letterSpacing:'0.5px' }}>
+        {label}
+      </span>
+    </button>
+  )
+}
 
 // ── Segmented ring ────────────────────────────────────────────────────
-function RingChart({ pct, color, size=180 }) {
-  const segments = 36, filled = Math.round(pct/100*segments)
-  const r = 64, cx = size/2, cy = size/2
+function RingChart({ pct, color, size=160 }) {
+  const segments = 32, filled = Math.round(pct/100*segments)
+  const r = 56, cx = size/2, cy = size/2
   const gap = 5, segA = (360 - segments*gap)/segments
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       {Array.from({length:segments}).map((_,i) => {
         const s=(i*(segA+gap)-90)*Math.PI/180, e=(i*(segA+gap)-90+segA)*Math.PI/180
         const x1=cx+r*Math.cos(s),y1=cy+r*Math.sin(s),x2=cx+r*Math.cos(e),y2=cy+r*Math.sin(e)
-        const f=i<filled
         return <path key={i} d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`}
-          fill={f?color:'#e0e8f0'} opacity={f?(0.4+(i/Math.max(filled,1))*0.6):1}/>
+          fill={i<filled ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.15)'}
+          opacity={i<filled ? (0.4+(i/Math.max(filled,1))*0.6) : 1}/>
       })}
-      <circle cx={cx} cy={cy} r={r-20} fill="white"/>
+      <circle cx={cx} cy={cy} r={r-18} fill="rgba(0,0,0,0.2)"/>
     </svg>
-  )
-}
-
-// ── Color picker ──────────────────────────────────────────────────────
-function ColorPicker({ color: currentColor }) {
-  const { user, updateProfile } = useAuth()
-  const cur = currentColor || user?.markColor || '#6c63ff'
-  return (
-    <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16, padding:'16px', marginBottom:12 }}>
-      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-        <div style={{ width:32,height:32,borderRadius:9,background:`${cur}20`,display:'flex',alignItems:'center',justifyContent:'center' }}>
-          <Palette size={15} color={cur}/>
-        </div>
-        <span style={{ fontSize:13, fontWeight:700, color:'var(--text)' }}>Escolha a sua cor</span>
-      </div>
-      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-        {MARK_COLORS.map(hex => {
-          const selected = cur === hex
-          return (
-            <button key={hex} onClick={() => {
-              // Update CSS var instantly for immediate visual feedback
-              document.documentElement.style.setProperty('--mark-color', hex)
-              updateProfile({ markColor: hex })
-            }} style={{
-              width:36, height:36, borderRadius:10, background:hex, border:'none',
-              cursor:'pointer', position:'relative', flexShrink:0, transition:'transform .15s, box-shadow .15s',
-              transform: selected ? 'scale(1.2)' : 'scale(1)',
-              boxShadow: selected ? `0 0 0 3px white, 0 0 0 5px ${hex}` : `0 2px 6px ${hex}60`,
-            }}>
-              {selected && <Check size={14} color="#fff" style={{position:'absolute',inset:0,margin:'auto'}}/>}
-            </button>
-          )
-        })}
-      </div>
-    </div>
   )
 }
 
@@ -98,6 +86,7 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
   const isMun=sub==='municipalities'
   const count=isMun?munCount:parCount, total=isMun?TOTAL_MUN:TOTAL_PAR, pct=isMun?munPct:parPct
   const lvl=getLevel(munPct), nextLvl=getNextLevel(munPct)
+  const bgColor=`${color}18`
 
   const lastVisited = [...(isMun?visitedMun:visitedPar)].slice(-10).reverse().map(id => {
     const val=idNameMap.get(id)
@@ -107,40 +96,38 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
 
   return (
     <div style={{padding:'16px 16px 100px'}}>
-      {/* Sub-tabs */}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
         {[
-          {key:'municipalities',label:'Concelhos',count:munCount,pct:munPct,total:TOTAL_MUN},
-          {key:'parishes',label:'Freguesias',count:parCount,pct:parPct,total:TOTAL_PAR},
-        ].map(t => (
+          {key:'municipalities',label:'Concelhos',count:munCount,pct:munPct,total:TOTAL_MUN,c:'#6c63ff'},
+          {key:'parishes',label:'Freguesias',count:parCount,pct:parPct,total:TOTAL_PAR,c:'#4ea8de'},
+        ].map(t=>(
           <button key={t.key} onClick={()=>setSub(t.key)} style={{
             padding:'14px 12px',borderRadius:16,border:'2px solid',
-            borderColor:sub===t.key?color:'var(--border)',
-            background:sub===t.key?`${color}12`:'var(--surface)',
+            borderColor:sub===t.key?t.c:'var(--border)',
+            background:sub===t.key?`${t.c}12`:'var(--surface)',
             cursor:'pointer',transition:'all .18s',textAlign:'left',
-            boxShadow:sub===t.key?`0 4px 16px ${color}25`:'none',
+            boxShadow:sub===t.key?`0 4px 16px ${t.c}25`:'none',
           }}>
-            <div style={{fontSize:28,fontWeight:900,color:sub===t.key?color:'var(--muted)',lineHeight:1}}>{t.count}</div>
-            <div style={{fontSize:12,fontWeight:700,color:sub===t.key?color:'var(--muted)',marginTop:3}}>{t.label}</div>
+            <div style={{fontSize:28,fontWeight:900,color:sub===t.key?t.c:'var(--muted)',lineHeight:1}}>{t.count}</div>
+            <div style={{fontSize:12,fontWeight:700,color:sub===t.key?t.c:'var(--muted)',marginTop:3}}>{t.label}</div>
             <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>de {t.total} · {t.pct}%</div>
           </button>
         ))}
       </div>
 
-      {/* Ring + level */}
       <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,padding:'20px 16px 16px',marginBottom:14,boxShadow:`0 4px 20px ${color}10`}}>
         <div style={{display:'flex',alignItems:'center',gap:16}}>
           <div style={{position:'relative',width:130,height:130,flexShrink:0}}>
-            <RingChart pct={pct} color={color} size={130}/>
+            <RingChart pct={pct} color={isMun?'#6c63ff':'#4ea8de'} size={130}/>
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-              <div style={{fontSize:28,fontWeight:900,color,lineHeight:1}}>{pct}%</div>
+              <div style={{fontSize:28,fontWeight:900,color:isMun?'#6c63ff':'#4ea8de',lineHeight:1}}>{pct}%</div>
               <div style={{fontSize:10,color:'var(--muted)',marginTop:2}}>de {total}</div>
             </div>
           </div>
           <div style={{flex:1}}>
             <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',color:'var(--muted)',marginBottom:4}}>Nível atual</div>
             <div style={{fontSize:20,fontWeight:800,color,marginBottom:4}}>{lvl.label}</div>
-            {nextLvl && <div style={{fontSize:12,color:'var(--muted)',marginBottom:10}}>Próximo: <strong style={{color}}>{nextLvl.label}</strong> aos {nextLvl.min}%</div>}
+            {nextLvl&&<div style={{fontSize:12,color:'var(--muted)',marginBottom:10}}>Próximo: <strong style={{color}}>{nextLvl.label}</strong> ({nextLvl.min}%)</div>}
             <div style={{height:6,background:'var(--border)',borderRadius:3,overflow:'hidden'}}>
               <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:3,transition:'width .8s'}}/>
             </div>
@@ -152,46 +139,24 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
         </div>
       </div>
 
-      {/* Stats cards */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
-        <div style={{background:'var(--surface)',border:`1px solid ${color}25`,borderRadius:14,padding:'13px 14px',borderLeft:`3px solid ${color}`}}>
-          <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.8px',marginBottom:4}}>Visitados</div>
-          <div style={{fontSize:22,fontWeight:800,color}}>{count}</div>
-          <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>{pct}% do total</div>
-        </div>
-        <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,padding:'13px 14px',borderLeft:'3px solid var(--border2)'}}>
-          <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.8px',marginBottom:4}}>Por visitar</div>
-          <div style={{fontSize:22,fontWeight:800,color:'var(--muted)'}}>{total-count}</div>
-          <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>{100-pct}% do total</div>
-        </div>
-      </div>
-
-      {/* Last visited list */}
-      <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',boxShadow:`0 2px 12px ${color}08`}}>
-        <div style={{padding:'12px 16px 8px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:8}}>
-          <div style={{width:6,height:6,borderRadius:'50%',background:color}}/>
-          <span style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',color:'var(--muted)'}}>
-            Últim{isMun?'os concelhos':'as freguesias'} visitad{isMun?'os':'as'}
-          </span>
-        </div>
-        {lastVisited.length===0 ? (
-          <div style={{padding:'20px 16px',fontSize:13,color:'var(--muted)',fontStyle:'italic'}}>
-            Ainda nenhum{isMun?'':'a'} visitad{isMun?'o':'a'}. Abre o mapa!
+      {lastVisited.length>0&&(
+        <div style={{background:'var(--surface)',border:`1px solid ${color}25`,borderRadius:16,overflow:'hidden',boxShadow:`0 2px 12px ${color}10`}}>
+          <div style={{padding:'12px 16px 8px',borderBottom:`1px solid ${color}20`,background:`${color}06`}}>
+            <span style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',color}}>
+              Últim{isMun?'os concelhos':'as freguesias'} visitad{isMun?'os':'as'}
+            </span>
           </div>
-        ) : (
-          <div>
-            {lastVisited.map(({name,id},i) => (
-              <div key={id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 16px',borderBottom:i<lastVisited.length-1?'1px solid var(--border)':'none'}}>
-                <div style={{width:24,height:24,borderRadius:7,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <span style={{fontSize:10,fontWeight:800,color}}>{i+1}</span>
-                </div>
-                <span style={{fontSize:13,fontWeight:500,color:'var(--text)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{name}</span>
-                <MapPin size={11} style={{color,flexShrink:0}}/>
+          {lastVisited.map(({name,id},i)=>(
+            <div key={id} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 16px',borderBottom:i<lastVisited.length-1?`1px solid ${color}15`:'none',background:i%2===0?`${color}04`:'transparent'}}>
+              <div style={{width:26,height:26,borderRadius:8,background:color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 2px 6px ${color}40`}}>
+                <span style={{fontSize:10,fontWeight:800,color:'#fff'}}>{i+1}</span>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <span style={{fontSize:13,fontWeight:600,color,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{name}</span>
+              <MapPin size={12} style={{color,flexShrink:0}}/>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -199,36 +164,16 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
 // ── Profile info tab ──────────────────────────────────────────────────
 function ProfileInfoTab({ user, onEditProfile, color }) {
   const fields = [
-    {label:'Username', value:user?.id},
-    {label:'Nome',     value:user?.displayName||'—'},
-    {label:'Email',    value:user?.email},
-    {label:'País',     value:user?.country||'—'},
-    {label:'Localidade', value:user?.location||'—'},
+    {label:'Username',    value:user?.id},
+    {label:'Nome',        value:user?.displayName||'—'},
+    {label:'Email',       value:user?.email},
+    {label:'País',        value:user?.country||'—'},
+    {label:'Localidade',  value:user?.location||'—'},
   ]
   return (
     <div style={{padding:'16px 16px 100px'}}>
-      {/* Profile card — inspired by cycling app */}
-      <div style={{background:`linear-gradient(145deg,${color},${color}bb)`,borderRadius:20,padding:'20px',marginBottom:16,position:'relative',overflow:'hidden',boxShadow:`0 8px 32px ${color}40`}}>
-        <div style={{position:'absolute',right:-20,top:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,.1)'}}/>
-        <div style={{position:'absolute',right:10,bottom:-15,width:60,height:60,borderRadius:'50%',background:'rgba(255,255,255,.07)'}}/>
-        <div style={{display:'flex',alignItems:'center',gap:14,position:'relative'}}>
-          <div style={{width:64,height:64,borderRadius:18,overflow:'hidden',background:'rgba(255,255,255,.2)',border:'2px solid rgba(255,255,255,.4)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(0,0,0,.2)'}}>
-            {user?.photo?<img src={user.photo} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:28}}>👤</span>}
-          </div>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:800,fontSize:20,color:'#fff',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user?.displayName||user?.id}</div>
-            <div style={{fontSize:12,color:'rgba(255,255,255,.65)',marginTop:2}}>@{user?.id}</div>
-            <div style={{display:'flex',gap:10,marginTop:5,flexWrap:'wrap'}}>
-              {user?.country  && <span style={{fontSize:11,color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',gap:3}}><Globe size={10}/> {user.country}</span>}
-              {user?.location && <span style={{fontSize:11,color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',gap:3}}><Home size={10}/> {user.location}</span>}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Info list */}
-      <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',marginBottom:14,boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
-        {fields.map((f,i) => (
+      <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',marginBottom:14}}>
+        {fields.map((f,i)=>(
           <div key={f.label} style={{display:'flex',alignItems:'center',gap:14,padding:'13px 16px',borderBottom:i<fields.length-1?'1px solid var(--border)':'none'}}>
             <div style={{width:8,height:8,borderRadius:'50%',background:color,flexShrink:0}}/>
             <div style={{flex:1,minWidth:0}}>
@@ -240,14 +185,41 @@ function ProfileInfoTab({ user, onEditProfile, color }) {
       </div>
 
       {/* Color picker */}
-      <ColorPicker color={color}/>
+      <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:'14px 16px',marginBottom:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+          <Palette size={15} color={color}/>
+          <span style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>Escolha a sua cor</span>
+        </div>
+        <ColorPicker color={color}/>
+      </div>
 
-      {/* Edit button */}
       <button onClick={onEditProfile} style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',borderRadius:14,border:'none',background:color,cursor:'pointer',width:'100%',boxShadow:`0 4px 16px ${color}50`}}>
         <Edit3 size={15} color="#fff"/>
         <span style={{fontSize:14,fontWeight:700,color:'#fff'}}>Editar perfil</span>
         <ChevronLeft size={14} color="rgba(255,255,255,.7)" style={{transform:'rotate(180deg)',marginLeft:'auto'}}/>
       </button>
+    </div>
+  )
+}
+
+function ColorPicker({ color: currentColor }) {
+  const { user, updateProfile } = useAuth()
+  const cur = currentColor || user?.markColor || '#6c63ff'
+  return (
+    <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+      {MARK_COLORS.map(hex => {
+        const selected = cur===hex
+        return (
+          <button key={hex} onClick={()=>{ document.documentElement.style.setProperty('--mark-color',hex); updateProfile({markColor:hex}) }} style={{
+            width:36,height:36,borderRadius:10,background:hex,border:'none',
+            cursor:'pointer',position:'relative',flexShrink:0,transition:'transform .15s, box-shadow .15s',
+            transform:selected?'scale(1.2)':'scale(1)',
+            boxShadow:selected?`0 0 0 3px white, 0 0 0 5px ${hex}`:`0 2px 6px ${hex}60`,
+          }}>
+            {selected&&<Check size={14} color="#fff" style={{position:'absolute',inset:0,margin:'auto'}}/>}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -262,26 +234,25 @@ function FavoritesTab({ user, color }) {
       .then(({data})=>{setFavorites(data?.favorites||[]);setLoading(false)})
   },[user?.supabaseId])
   async function remove(id){
-    const next=favorites.filter(f=>f.id!==id); setFavorites(next)
+    const next=favorites.filter(f=>f.id!==id);setFavorites(next)
     await supabase.from('profiles').update({favorites:next}).eq('id',user.supabaseId)
   }
-  if(loading) return <div style={{display:'flex',justifyContent:'center',padding:48}}><div style={{width:24,height:24,border:'2px solid var(--border)',borderTopColor:color,borderRadius:'50%',animation:'spin .7s linear infinite'}}/></div>
+  if(loading) return <div style={{display:'flex',justifyContent:'center',padding:48}}><div style={{width:24,height:24,border:`2px solid var(--border)`,borderTopColor:color,borderRadius:'50%',animation:'spin .7s linear infinite'}}/></div>
   if(favorites.length===0) return (
     <div style={{textAlign:'center',padding:'60px 28px'}}>
-      <div style={{width:64,height:64,borderRadius:18,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',border:`1px solid ${color}25`}}>
-        <Star size={28} color={color}/>
+      <div style={{width:56,height:56,borderRadius:16,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',border:`1px solid ${color}25`}}>
+        <Star size={26} color={color}/>
       </div>
-      <div style={{fontSize:17,fontWeight:700,color:'var(--text)',marginBottom:8}}>Nenhum favorito ainda</div>
+      <div style={{fontSize:16,fontWeight:700,color:'var(--text)',marginBottom:8}}>Nenhum favorito ainda</div>
       <div style={{fontSize:13,lineHeight:1.7,color:'var(--muted)'}}>Toca na estrela numa localidade para guardar para as próximas viagens.</div>
     </div>
   )
   return (
     <div style={{padding:'16px 16px 100px'}}>
-      <div style={{fontSize:12,color:'var(--muted)',marginBottom:12}}>{favorites.length} localidade{favorites.length!==1?'s':''} guardada{favorites.length!==1?'s':''}</div>
       {favorites.map(f=>{
         const isMun=f.level!=='parishes'
         return (
-          <div key={f.id} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderRadius:16,marginBottom:8,background:'var(--surface)',border:'1px solid var(--border)',boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
+          <div key={f.id} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderRadius:16,marginBottom:8,background:'var(--surface)',border:'1px solid var(--border)'}}>
             <div style={{width:42,height:42,borderRadius:12,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <Star size={18} fill={color} color={color}/>
             </div>
@@ -306,10 +277,8 @@ function SubmissionsTab({ userId, color }) {
   useEffect(()=>{if(userId) getSuggestionsForUser(userId).then(setSubmissions)},[userId])
   if(submissions.length===0) return (
     <div style={{textAlign:'center',padding:'60px 28px'}}>
-      <div style={{width:64,height:64,borderRadius:18,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',border:`1px solid ${color}25`}}>
-        <TrendingUp size={28} color={color}/>
-      </div>
-      <div style={{fontSize:17,fontWeight:700,color:'var(--text)',marginBottom:8}}>Nenhuma sugestão ainda</div>
+      <div style={{width:56,height:56,borderRadius:16,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}><TrendingUp size={26} color={color}/></div>
+      <div style={{fontSize:16,fontWeight:700,color:'var(--text)',marginBottom:8}}>Nenhuma sugestão ainda</div>
       <div style={{fontSize:13,lineHeight:1.7,color:'var(--muted)'}}>Explora o mapa e sugere informação sobre os locais que conheces.</div>
     </div>
   )
@@ -320,7 +289,6 @@ function SubmissionsTab({ userId, color }) {
   }
   return (
     <div style={{padding:'16px 16px 100px'}}>
-      <div style={{fontSize:12,color:'var(--muted)',marginBottom:12}}>{submissions.length} submissão{submissions.length!==1?'ões':''}</div>
       {submissions.map(s=>{
         const cat=CATS.find(c=>c.key===s.category)||CATS[4]
         const st=statusInfo[s.status]||statusInfo.pending
@@ -345,7 +313,7 @@ function SubmissionsTab({ userId, color }) {
   )
 }
 
-// ── Edit profile panel ────────────────────────────────────────────────
+// ── Edit profile ──────────────────────────────────────────────────────
 function EditProfilePanel({ user, onSaved, color }) {
   const {updatePhoto,updateProfile}=useAuth()
   const [fields,setFields]=useState({displayName:user?.displayName||user?.id||'',fullName:user?.fullName||'',country:user?.country||'Portugal',location:user?.location||'',pw:''})
@@ -364,7 +332,6 @@ function EditProfilePanel({ user, onSaved, color }) {
   }
   return (
     <div style={{padding:'16px 16px 100px'}}>
-      {/* Photo */}
       <div style={{display:'flex',alignItems:'center',gap:14,padding:'14px 16px',borderRadius:16,background:'var(--surface)',border:'1px solid var(--border)',marginBottom:16}}>
         <div style={{width:60,height:60,borderRadius:16,overflow:'hidden',background:'var(--surface2)',border:'2px solid var(--border)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
           {user?.photo?<img src={user.photo} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:26}}>👤</span>}
@@ -377,7 +344,6 @@ function EditProfilePanel({ user, onSaved, color }) {
         </div>
         <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:'none'}}/>
       </div>
-      {/* Read-only */}
       <div style={{background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:14,overflow:'hidden',marginBottom:16}}>
         {[{label:'Username',value:user?.id},{label:'Email',value:user?.email}].map((f,i)=>(
           <div key={f.label} style={{display:'flex',alignItems:'center',gap:10,padding:'11px 14px',borderBottom:i===0?'1px solid var(--border)':'none'}}>
@@ -416,7 +382,6 @@ function EditProfilePanel({ user, onSaved, color }) {
             {showPw?<EyeOff size={16}/>:<Eye size={16}/>}
           </button>
         </div>
-        <div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>Mínimo 4 caracteres.</div>
       </div>
       <button onClick={save} disabled={busy||saved} style={{width:'100%',padding:'14px',borderRadius:14,border:'none',background:saved?'#43c59e':color,color:'#fff',fontSize:14,fontWeight:700,cursor:busy||saved?'default':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginTop:20,boxShadow:saved?'none':`0 4px 20px ${color}50`}}>
         {saved?<><Check size={15}/> Guardado!</>:busy?'A guardar…':'Guardar alterações'}
@@ -425,48 +390,98 @@ function EditProfilePanel({ user, onSaved, color }) {
   )
 }
 
+// ── TABS config ───────────────────────────────────────────────────────
+const TABS = [
+  { key:'explorer',    label:'Explorar', icon: <Map size={22}/> },
+  { key:'passport',    label:'Passaporte', icon: <BookOpen size={22}/> },
+  { key:'favorites',   label:'Favoritos',  icon: <Star size={22}/> },
+  { key:'suggestions', label:'Sugestões',  icon: <TrendingUp size={22}/> },
+  { key:'info',        label:'Perfil',     icon: <User size={22}/> },
+]
+
 // ── Main ──────────────────────────────────────────────────────────────
 export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, onClose, onStampClick }) {
   const {user,logout}=useAuth()
   const [tab,setTab]=useState('explorer')
   const [editing,setEditing]=useState(false)
+
   const munPct=Math.round((visitedMun?.size||0)/TOTAL_MUN*100)
   const color=user?.markColor||'#6c63ff'
   const lvl=getLevel(munPct)
-  const TABS=[
-    {key:'explorer',   label:'Explorador'},
-    {key:'passport',   label:'Passaporte'},
-    {key:'favorites',  label:'Favoritos'},
-    {key:'suggestions',label:'Sugestões'},
-    {key:'info',       label:'O Meu Perfil'},
-  ]
+  const nextLvl=getNextLevel(munPct)
+
   if(!user) return null
+
   return (
     <div style={{position:'fixed',inset:0,zIndex:2000,background:'var(--bg)',display:'flex',flexDirection:'column',animation:'slideLeft .28s cubic-bezier(.4,0,.2,1)'}}>
-      {/* Top bar */}
-      <div style={{background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'0 16px',paddingTop:'var(--safe-top)',display:'flex',alignItems:'center',height:54,flexShrink:0,gap:10}}>
-        <button onClick={onClose} style={{width:36,height:36,borderRadius:10,border:'1px solid var(--border)',background:'var(--surface2)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'var(--text)',flexShrink:0}}>
-          <ChevronLeft size={17}/>
-        </button>
-        <div style={{fontWeight:700,fontSize:15,flex:1}}>{editing?'Editar perfil':'O meu perfil'}</div>
-        {!editing
-          ?<button onClick={logout} style={{fontSize:12,color:'#ff6b6b',fontWeight:700,background:'#fff1f1',border:'1px solid rgba(255,107,107,.25)',borderRadius:9,cursor:'pointer',padding:'6px 12px'}}>Sair</button>
-          :<button onClick={()=>setEditing(false)} style={{fontSize:12,color:'var(--muted)',fontWeight:600,background:'none',border:'1px solid var(--border)',borderRadius:9,cursor:'pointer',padding:'6px 12px'}}>Cancelar</button>
-        }
-      </div>
-      {/* Tab bar */}
-      {!editing&&(
-        <div style={{display:'flex',background:'var(--surface)',borderBottom:'1px solid var(--border)',flexShrink:0}}>
-          {TABS.map(t=>(
-            <button key={t.key} onClick={()=>setTab(t.key)} style={{
-              flex:1,padding:'10px 2px 9px',border:'none',
-              borderBottom:`2.5px solid ${tab===t.key?color:'transparent'}`,
-              background:'transparent',color:tab===t.key?color:'var(--muted)',
-              fontSize:11,fontWeight:tab===t.key?700:500,cursor:'pointer',whiteSpace:'nowrap',minWidth:70,transition:'all .15s',
-            }}>{t.label}</button>
-          ))}
+
+      {/* ── Hero with colour mantle ── */}
+      {!editing && (
+        <div style={{background:`linear-gradient(160deg, ${color} 0%, ${color}dd 100%)`,paddingTop:'var(--safe-top)',flexShrink:0,position:'relative',overflow:'hidden'}}>
+          {/* Decorative blobs */}
+          <div style={{position:'absolute',right:-40,top:-40,width:150,height:150,borderRadius:'50%',background:'rgba(255,255,255,.08)'}}/>
+          <div style={{position:'absolute',left:-20,bottom:-30,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,.06)'}}/>
+
+          {/* Top bar */}
+          <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px 0',position:'relative'}}>
+            <button onClick={onClose} style={{width:36,height:36,borderRadius:10,border:'1px solid rgba(255,255,255,.3)',background:'rgba(255,255,255,.15)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#fff',flexShrink:0}}>
+              <ChevronLeft size={17}/>
+            </button>
+            <div style={{flex:1}}/>
+            <button onClick={logout} style={{fontSize:12,color:'#fff',fontWeight:700,background:'rgba(255,255,255,.2)',border:'1px solid rgba(255,255,255,.3)',borderRadius:9,cursor:'pointer',padding:'6px 12px'}}>Sair</button>
+          </div>
+
+          {/* Profile info */}
+          <div style={{display:'flex',alignItems:'center',gap:14,padding:'16px 16px 8px',position:'relative'}}>
+            <div style={{width:64,height:64,borderRadius:20,overflow:'hidden',background:'rgba(255,255,255,.2)',border:'2.5px solid rgba(255,255,255,.4)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(0,0,0,.2)'}}>
+              {user.photo?<img src={user.photo} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:28}}>👤</span>}
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:800,fontSize:20,color:'#fff',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'-.3px'}}>{user.displayName||user.id}</div>
+              <div style={{fontSize:12,color:'rgba(255,255,255,.65)',marginTop:1}}>@{user.id}</div>
+              <div style={{display:'flex',gap:10,marginTop:4,flexWrap:'wrap'}}>
+                {user.country&&<span style={{fontSize:11,color:'rgba(255,255,255,.6)',display:'flex',alignItems:'center',gap:3}}><Globe size={10}/> {user.country}</span>}
+                {user.location&&<span style={{fontSize:11,color:'rgba(255,255,255,.6)',display:'flex',alignItems:'center',gap:3}}><Home size={10}/> {user.location}</span>}
+              </div>
+            </div>
+            {/* Ring + level */}
+            <div style={{flexShrink:0,textAlign:'center',position:'relative',width:80,height:80}}>
+              <RingChart pct={munPct} color={color} size={80}/>
+              <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:16,fontWeight:900,color:'#fff',lineHeight:1}}>{munPct}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Level badge */}
+          <div style={{margin:'0 16px 16px',padding:'8px 14px',background:'rgba(255,255,255,.15)',borderRadius:12,display:'flex',alignItems:'center',gap:10,position:'relative'}}>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,fontSize:13,color:'#fff'}}>{lvl.label}</div>
+              {nextLvl&&<div style={{fontSize:11,color:'rgba(255,255,255,.6)',marginTop:1}}>Próximo: {nextLvl.label} · {nextLvl.min}%</div>}
+            </div>
+            <div style={{background:'rgba(255,255,255,.2)',borderRadius:8,padding:'4px 10px',fontSize:13,fontWeight:700,color:'#fff'}}>{visitedMun.size} concelhos</div>
+          </div>
+
+          {/* Hexagon navigation tabs */}
+          <div style={{display:'flex',justifyContent:'space-around',padding:'4px 8px 20px',position:'relative'}}>
+            {TABS.map(t=>(
+              <HexButton key={t.key} icon={t.icon} label={t.label} active={tab===t.key} color="rgba(255,255,255,.35)" onClick={()=>setTab(t.key)}/>
+            ))}
+          </div>
         </div>
       )}
+
+      {/* Edit top bar */}
+      {editing && (
+        <div style={{background:'var(--surface)',borderBottom:'1px solid var(--border)',padding:'0 16px',paddingTop:'var(--safe-top)',display:'flex',alignItems:'center',height:54,flexShrink:0,gap:10}}>
+          <button onClick={()=>setEditing(false)} style={{width:36,height:36,borderRadius:10,border:'1px solid var(--border)',background:'var(--surface2)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'var(--text)',flexShrink:0}}>
+            <ChevronLeft size={17}/>
+          </button>
+          <div style={{fontWeight:700,fontSize:15,flex:1}}>Editar perfil</div>
+          <button onClick={()=>setEditing(false)} style={{fontSize:12,color:'var(--muted)',fontWeight:600,background:'none',border:'1px solid var(--border)',borderRadius:9,cursor:'pointer',padding:'5px 10px'}}>Cancelar</button>
+        </div>
+      )}
+
       {/* Content */}
       <div style={{flex:1,overflowY:'auto'}}>
         {editing
