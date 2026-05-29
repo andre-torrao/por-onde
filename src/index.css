@@ -37,8 +37,8 @@
   --unvisited:       #dce4f0;
   --unvisited-stroke:#b0c0d8;
 
-  --radius:    14px;
-  --radius-sm: 9px;
+  --radius:    20px;
+  --radius-sm: 12px;
   --shadow:    0 2px 16px rgba(108,99,255,.1);
   --shadow-lg: 0 8px 40px rgba(108,99,255,.15);
 
@@ -91,3 +91,16 @@ html, body, #root {
 
 button { -webkit-tap-highlight-color: transparent; font-family: var(--font); }
 @media (hover: none) and (pointer: coarse) { button { min-height: 44px; } }
+
+/* Rounded card style inspired by chat/profile app */
+.card {
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+/* Floating card effect */
+.leaflet-control-zoom {
+  border-radius: 20px !important;
+}
+
+/* Bottom sheet more rounded */

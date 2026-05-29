@@ -73,7 +73,7 @@ function RingChart({ pct, color, size=160 }) {
           fill={i<filled ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.15)'}
           opacity={i<filled ? (0.4+(i/Math.max(filled,1))*0.6) : 1}/>
       })}
-      <circle cx={cx} cy={cy} r={r-18} fill="rgba(0,0,0,0.2)"/>
+      <circle cx={cx} cy={cy} r={r-22} fill="rgba(0,0,0,0.2)"/>
     </svg>
   )
 }
@@ -444,22 +444,19 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
                 {user.location&&<span style={{fontSize:11,color:'rgba(255,255,255,.6)',display:'flex',alignItems:'center',gap:3}}><Home size={10}/> {user.location}</span>}
               </div>
             </div>
-            {/* Ring + level */}
-            <div style={{flexShrink:0,textAlign:'center',position:'relative',width:80,height:80}}>
-              <RingChart pct={munPct} color={color} size={80}/>
-              <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-                <span style={{fontSize:16,fontWeight:900,color:'#fff',lineHeight:1}}>{munPct}%</span>
-              </div>
-            </div>
+
           </div>
 
-          {/* Level badge */}
-          <div style={{margin:'0 16px 16px',padding:'8px 14px',background:'rgba(255,255,255,.15)',borderRadius:12,display:'flex',alignItems:'center',gap:10,position:'relative'}}>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:700,fontSize:13,color:'#fff'}}>{lvl.label}</div>
-              {nextLvl&&<div style={{fontSize:11,color:'rgba(255,255,255,.6)',marginTop:1}}>Próximo: {nextLvl.label} · {nextLvl.min}%</div>}
+          {/* Level badge — centered pill */}
+          <div style={{display:'flex',justifyContent:'center',gap:10,margin:'10px 16px 16px'}}>
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,.18)',borderRadius:20,border:'1px solid rgba(255,255,255,.25)'}}>
+              <div style={{width:7,height:7,borderRadius:'50%',background:'#fff',opacity:.9}}/>
+              <span style={{fontWeight:700,fontSize:13,color:'#fff'}}>{lvl.label}</span>
+              {nextLvl&&<span style={{fontSize:11,color:'rgba(255,255,255,.6)'}}>→ {nextLvl.label} ({nextLvl.min}%)</span>}
             </div>
-            <div style={{background:'rgba(255,255,255,.2)',borderRadius:8,padding:'4px 10px',fontSize:13,fontWeight:700,color:'#fff'}}>{visitedMun.size} concelhos</div>
+            <div style={{display:'inline-flex',alignItems:'center',padding:'8px 14px',background:'rgba(255,255,255,.18)',borderRadius:20,border:'1px solid rgba(255,255,255,.25)'}}>
+              <span style={{fontWeight:700,fontSize:13,color:'#fff'}}>{visitedMun.size} concelhos</span>
+            </div>
           </div>
 
           {/* Hexagon navigation tabs */}
