@@ -37,7 +37,7 @@ function EntryRow({ id, displayName, concelho, isVisited, q, accentColor, onView
   return (
     <div style={{
       display:'flex', alignItems:'center', gap:8,
-      padding:'10px 10px', borderRadius:12, marginBottom:4,
+      padding:'10px 10px', borderRadius:16, marginBottom:6,
       border:'1px solid',
       borderColor: isVisited ? `${accentColor}35` : 'var(--border)',
       background: isVisited ? `${accentColor}10` : 'var(--surface)',
@@ -174,7 +174,7 @@ export default function Sidebar({
       <div style={{ padding:'10px 12px 0', flexShrink:0, display:'flex', gap:6 }}>
         {[['all','Todos'],['visited',`Visitados (${vCount})`]].map(([k,l]) => (
           <button key={k} onClick={() => { setTab(k); setQ('') }} style={{
-            flex:1, padding:'8px 6px', borderRadius:10, border:'none',
+            flex:1, padding:'8px 6px', borderRadius:14, border:'none',
             background: tab===k ? accentColor : 'var(--surface)',
             color: tab===k ? '#fff' : 'var(--muted)',
             fontSize:12, fontWeight: tab===k ? 700 : 500,

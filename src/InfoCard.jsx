@@ -122,7 +122,7 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, on
           onTouchEnd={onTouchEnd}
           style={{
             background:'#ffffff',
-            borderRadius:'20px 20px 0 0',
+            borderRadius:'28px 28px 0 0',
             boxShadow:`0 -4px 32px ${color}30, 0 -1px 0 ${color}20`,
             border:`1px solid ${color}20`,
             borderBottom:'none',
@@ -237,7 +237,7 @@ export default function InfoCard({ tooltip, onOpenSuggest, onClose, onToggle, on
       style={{
         position:'fixed', left, top, width:cardW,
         maxHeight:'calc(100vh - 80px)',
-        borderRadius:14,
+        borderRadius:20,
         zIndex:9999,
         overflowY:'auto',
         background:'var(--surface)', border:'1px solid var(--border)',

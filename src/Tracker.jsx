@@ -387,7 +387,7 @@ export default function Tracker() {
               bottom: isMobile ? 'calc(var(--safe-bottom) + 12px)' : 22,
               left:'50%', transform:'translateX(-50%)',
               background: toast.type==='add' ? markColor : 'var(--text)',
-              color:'#fff', borderRadius:10, padding:'10px 20px',
+              color:'#fff', borderRadius:16, padding:'10px 20px',
               fontSize:13, fontWeight:600, zIndex:9000,
               boxShadow:'0 4px 18px rgba(0,0,0,.2)',
               animation:'fadeUp .28s ease', whiteSpace:'nowrap',
