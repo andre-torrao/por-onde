@@ -431,35 +431,37 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
             <button onClick={logout} style={{fontSize:12,color:'#fff',fontWeight:700,background:'rgba(255,255,255,.2)',border:'1px solid rgba(255,255,255,.3)',borderRadius:9,cursor:'pointer',padding:'6px 12px'}}>Sair</button>
           </div>
 
-          {/* Profile info */}
-          <div style={{display:'flex',alignItems:'center',gap:14,padding:'16px 16px 8px',position:'relative'}}>
-            <div style={{width:64,height:64,borderRadius:20,overflow:'hidden',background:'rgba(255,255,255,.2)',border:'2.5px solid rgba(255,255,255,.4)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(0,0,0,.2)'}}>
-              {user.photo?<img src={user.photo} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:28}}>👤</span>}
+          {/* Avatar centered */}
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'14px 16px 0',position:'relative'}}>
+            <div style={{width:88,height:88,borderRadius:'50%',overflow:'hidden',background:'rgba(255,255,255,.2)',border:'3px solid rgba(255,255,255,.5)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 20px rgba(0,0,0,.25)',marginBottom:12}}>
+              {user.photo?<img src={user.photo} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:34}}>👤</span>}
             </div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:800,fontSize:20,color:'#fff',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'-.3px'}}>{user.displayName||user.id}</div>
-              <div style={{fontSize:12,color:'rgba(255,255,255,.65)',marginTop:1}}>@{user.id}</div>
-              <div style={{display:'flex',gap:10,marginTop:4,flexWrap:'wrap'}}>
-                {user.country&&<span style={{fontSize:11,color:'rgba(255,255,255,.6)',display:'flex',alignItems:'center',gap:3}}><Globe size={10}/> {user.country}</span>}
-                {user.location&&<span style={{fontSize:11,color:'rgba(255,255,255,.6)',display:'flex',alignItems:'center',gap:3}}><Home size={10}/> {user.location}</span>}
+            <div style={{fontWeight:800,fontSize:20,color:'#fff',textAlign:'center'}}>{user.displayName||user.id}</div>
+            <div style={{fontSize:12,color:'rgba(255,255,255,.65)',marginTop:2}}>@{user.id}</div>
+            {(user.country||user.location)&&(
+              <div style={{display:'flex',gap:12,marginTop:6,flexWrap:'wrap',justifyContent:'center'}}>
+                {user.country&&<span style={{fontSize:11,color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',gap:3}}><Globe size={10}/>{user.country}</span>}
+                {user.location&&<span style={{fontSize:11,color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',gap:3}}><Home size={10}/>{user.location}</span>}
+              </div>
+            )}
+            {/* Stats row */}
+            <div style={{display:'flex',gap:0,marginTop:14,marginBottom:14,background:'rgba(255,255,255,.15)',borderRadius:16,overflow:'hidden',border:'1px solid rgba(255,255,255,.2)'}}>
+              <div style={{padding:'10px 20px',textAlign:'center',borderRight:'1px solid rgba(255,255,255,.2)'}}>
+                <div style={{fontSize:18,fontWeight:800,color:'#fff',lineHeight:1}}>{visitedMun.size}</div>
+                <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginTop:3,textTransform:'uppercase',letterSpacing:'1px'}}>Concelhos</div>
+              </div>
+              <div style={{padding:'10px 20px',textAlign:'center',borderRight:'1px solid rgba(255,255,255,.2)'}}>
+                <div style={{fontSize:18,fontWeight:800,color:'#fff',lineHeight:1}}>{visitedPar?.size||0}</div>
+                <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginTop:3,textTransform:'uppercase',letterSpacing:'1px'}}>Freguesias</div>
+              </div>
+              <div style={{padding:'10px 20px',textAlign:'center'}}>
+                <div style={{fontSize:18,fontWeight:800,color:'#fff',lineHeight:1}}>{munPct}%</div>
+                <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginTop:3,textTransform:'uppercase',letterSpacing:'1px'}}>{lvl.label}</div>
               </div>
             </div>
-
           </div>
 
-          {/* Level badge — centered pill */}
-          <div style={{display:'flex',justifyContent:'center',gap:10,margin:'10px 16px 16px'}}>
-            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,.18)',borderRadius:20,border:'1px solid rgba(255,255,255,.25)'}}>
-              <div style={{width:7,height:7,borderRadius:'50%',background:'#fff',opacity:.9}}/>
-              <span style={{fontWeight:700,fontSize:13,color:'#fff'}}>{lvl.label}</span>
-              {nextLvl&&<span style={{fontSize:11,color:'rgba(255,255,255,.6)'}}>→ {nextLvl.label} ({nextLvl.min}%)</span>}
-            </div>
-            <div style={{display:'inline-flex',alignItems:'center',padding:'8px 14px',background:'rgba(255,255,255,.18)',borderRadius:20,border:'1px solid rgba(255,255,255,.25)'}}>
-              <span style={{fontWeight:700,fontSize:13,color:'#fff'}}>{visitedMun.size} concelhos</span>
-            </div>
-          </div>
-
-          {/* Hexagon navigation tabs */}
+          {/* Hexagon navigation tabs */}n tabs */}
           <div style={{display:'flex',justifyContent:'space-around',padding:'4px 8px 20px',position:'relative'}}>
             {TABS.map(t=>(
               <HexButton key={t.key} icon={t.icon} label={t.label} active={tab===t.key} color="rgba(255,255,255,.35)" onClick={()=>setTab(t.key)}/>
