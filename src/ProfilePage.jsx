@@ -117,11 +117,11 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
 
       <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:20,padding:'20px 16px 16px',marginBottom:14,boxShadow:`0 4px 20px ${color}10`}}>
         <div style={{display:'flex',alignItems:'center',gap:16}}>
-          <div style={{position:'relative',width:130,height:130,flexShrink:0}}>
-            <RingChart pct={pct} color={isMun?'#6c63ff':'#4ea8de'} size={130}/>
+          <div style={{position:'relative',width:150,height:150,flexShrink:0}}>
+            <RingChart pct={pct} color={isMun?'#6c63ff':'#4ea8de'} size={150}/>
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-              <div style={{fontSize:28,fontWeight:900,color:isMun?'#6c63ff':'#4ea8de',lineHeight:1}}>{pct}%</div>
-              <div style={{fontSize:10,color:'var(--muted)',marginTop:2}}>de {total}</div>
+              <div style={{fontSize:32,fontWeight:900,color:isMun?'#6c63ff':'#4ea8de',lineHeight:1}}>{pct}%</div>
+              <div style={{fontSize:10,color:'var(--muted)',marginTop:3}}>de {total}</div>
             </div>
           </div>
           <div style={{flex:1}}>
@@ -288,7 +288,7 @@ function ColorPicker({ color: currentColor }) {
 }
 
 // ── Favorites tab ─────────────────────────────────────────────────────
-function FavoritesTab({ user, color }) {
+function FavoritesTab({ user, color, onNavigate }) {
   const [favorites,setFavorites]=useState([])
   const [loading,setLoading]=useState(true)
   useEffect(()=>{
@@ -314,8 +314,18 @@ function FavoritesTab({ user, color }) {
     <div style={{padding:'16px 16px 100px'}}>
       {favorites.map(f=>{
         const isMun=f.level!=='parishes'
+        // Build slug from id for navigation
+        const slug = f.id.split('__')[0]
         return (
-          <div key={f.id} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderRadius:16,marginBottom:8,background:'var(--surface)',border:'1px solid var(--border)'}}>
+          <div key={f.id} style={{
+            display:'flex', alignItems:'center', gap:12,
+            padding:'13px 14px', borderRadius:16, marginBottom:8,
+            background:'var(--surface)', border:`1px solid var(--border)`,
+            cursor: onNavigate ? 'pointer' : 'default',
+            transition:'background .15s, border-color .15s',
+          }}
+            onClick={() => onNavigate?.(slug, f.name)}
+          >
             <div style={{width:42,height:42,borderRadius:12,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <Star size={18} fill={color} color={color}/>
             </div>
@@ -326,7 +336,16 @@ function FavoritesTab({ user, color }) {
                 {new Date(f.addedAt).toLocaleDateString('pt-PT')}
               </div>
             </div>
-            <button onClick={()=>remove(f.id)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--border2)',padding:8,borderRadius:8,display:'flex'}}><Trash2 size={15}/></button>
+            <div style={{display:'flex',alignItems:'center',gap:4}}>
+              {onNavigate && (
+                <div style={{color,opacity:0.5,display:'flex',alignItems:'center'}}>
+                  <MapPin size={14}/>
+                </div>
+              )}
+              <button onClick={e=>{e.stopPropagation();remove(f.id)}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--border2)',padding:'6px',borderRadius:8,display:'flex'}}>
+                <Trash2 size={15}/>
+              </button>
+            </div>
           </div>
         )
       })}
@@ -463,7 +482,7 @@ const TABS = [
 ]
 
 // ── Main ──────────────────────────────────────────────────────────────
-export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, onClose, onStampClick }) {
+export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, onClose, onStampClick, onNavigate }) {
   const {user,logout}=useAuth()
   const [tab,setTab]=useState('explorer')
   const [editing,setEditing]=useState(false)
@@ -551,7 +570,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
           :<>
             {tab==='explorer'    &&<ExplorerTab visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} color={color}/>}
             {tab==='passport'    &&<PassportTab visitedMun={visitedMun} color={color} onStampClick={onStampClick}/>}
-            {tab==='favorites'   &&<FavoritesTab user={user} color={color}/>}
+            {tab==='favorites'   &&<FavoritesTab user={user} color={color} onNavigate={onNavigate}/>}
             {tab==='suggestions' &&<SubmissionsTab userId={user.id} color={color}/>}
             {tab==='info'        &&<ProfileInfoTab user={user} onEditProfile={()=>setEditing(true)} color={color}/>}
           </>

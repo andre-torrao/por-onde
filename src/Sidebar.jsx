@@ -37,7 +37,7 @@ function EntryRow({ id, displayName, concelho, isVisited, q, accentColor, onView
   return (
     <div style={{
       display:'flex', alignItems:'center', gap:8,
-      padding:'10px 10px', borderRadius:16, marginBottom:6,
+      padding:'10px 12px', borderRadius:16, marginBottom:6,
       border:'1px solid',
       borderColor: isVisited ? `${accentColor}35` : 'var(--border)',
       background: isVisited ? `${accentColor}10` : 'var(--surface)',
@@ -215,7 +215,7 @@ export default function Sidebar({
       </div>
 
       {/* ── List ── */}
-      <div style={{ flex:1, overflowY:'auto', padding:'2px 10px 16px' }}>
+      <div style={{ flex:1, overflowY:'auto', padding:'2px 12px 16px' }}>
         {tab === 'visited' && vCount === 0 && (
           <div style={{ padding:'32px 8px', textAlign:'center', color:'var(--muted)', fontSize:13 }}>
             Ainda não marcaste nenhum{isMun?' concelho':'a freguesia'}

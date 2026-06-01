@@ -214,9 +214,11 @@ function PassportCover({ routes, getRoutePct, onSelectRoute }) {
               textAlign:'left',
               boxShadow: done ? `0 6px 24px ${route.color}55` : '0 2px 10px rgba(0,0,0,.12)',
               transition:'transform .15s, box-shadow .15s',
-              aspectRatio: '2/3',
               display:'block',
               width:'100%',
+              // paddingTop trick: reliable aspect ratio on all iOS/Android
+              paddingTop:'150%',
+              height:0,
             }}>
               {/* Cover image — fills entire card, no gaps */}
               {route.cover ? (

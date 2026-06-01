@@ -398,7 +398,7 @@ export default function Tracker() {
         </div>
       </div>
 
-      {profile && <ProfilePage visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} level={level} onClose={() => setProfile(false)} onStampClick={handleStampClick}/>}
+      {profile && <ProfilePage visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} level={level} onClose={() => setProfile(false)} onStampClick={handleStampClick} onNavigate={handleStampClick}/>}
       {admin && user?.isAdmin && <AdminPage onClose={() => setAdmin(false)}/>}
       {suggest && <SuggestPanel locationId={suggest.id} locationName={suggest.name} onClose={() => setSuggest(null)}/>}
     </div>
