@@ -15,39 +15,69 @@ function StampItem({ item, done, isVisitedOnMap, color, onToggle }) {
   }
 
   return (
-    <div onClick={handleClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, cursor:'pointer', width:'100%' }}>
+    <div onClick={handleClick} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, cursor:'pointer', width:'100%' }}>
       <div style={{
         position:'relative', width:'100%', aspectRatio:'1',
         borderRadius:10, overflow:'hidden',
-        transform: pressed ? 'scale(0.92)' : 'scale(1)',
+        transform: pressed ? 'scale(0.91)' : 'scale(1)',
         transition:'transform .15s',
-        border: done ? `2px solid ${color}70` : '2px solid transparent',
-        boxShadow: done ? `0 3px 10px ${color}35` : 'none',
+        boxShadow: done
+          ? `0 3px 12px ${color}50, 0 0 0 2px ${color}`
+          : '0 1px 4px rgba(0,0,0,0.10)',
+        background: done ? 'transparent' : '#e8e8e8',
       }}>
         {item.stamp ? (
           <>
             <img src={item.stamp} alt={item.name} style={{
-              width:'100%', height:'100%', objectFit:'cover',
-              filter: done ? 'none' : 'grayscale(1) opacity(0.2)',
+              position:'absolute', inset:0,
+              width:'100%', height:'100%',
+              objectFit:'cover', objectPosition:'center',
+              display:'block',
+              filter: done ? 'none' : 'grayscale(1) brightness(0.55)',
               transition:'filter .4s',
             }}/>
             {!done && (
-              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <Lock size={16} color="rgba(0,0,0,0.18)" strokeWidth={1.5}/>
+              <div style={{
+                position:'absolute', inset:0,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                background:'rgba(0,0,0,0.05)',
+              }}>
+                <Lock size={14} color="rgba(255,255,255,0.5)" strokeWidth={2}/>
               </div>
             )}
             {isVisitedOnMap && (
-              <div style={{ position:'absolute', bottom:3, left:3, background:color, color:'#fff', borderRadius:4, padding:'1px 5px', fontSize:8, fontWeight:700 }}>mapa</div>
+              <div style={{
+                position:'absolute', bottom:4, right:4,
+                background:color, color:'#fff',
+                borderRadius:4, padding:'1px 5px',
+                fontSize:7, fontWeight:800, letterSpacing:'0.3px',
+                textTransform:'uppercase',
+              }}>mapa</div>
             )}
           </>
         ) : (
-          <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:done?`${color}15`:'#f0f0f0', border:`2px ${done?'solid':'dashed'} ${done?color:'#ccc'}`, borderRadius:8 }}>
-            <div style={{ fontSize:14, fontWeight:800, color:done?color:'#ccc' }}>✓</div>
-            <div style={{ fontSize:8, color:done?color:'#bbb', fontWeight:600, textAlign:'center', padding:'0 4px' }}>{item.name.split(' ')[0]}</div>
+          <div style={{
+            width:'100%', height:'100%',
+            display:'flex', flexDirection:'column',
+            alignItems:'center', justifyContent:'center',
+            background: done ? `${color}20` : '#f0f0f0',
+            border:`2px ${done?'solid':'dashed'} ${done?color:'#ccc'}`,
+          }}>
+            <div style={{ fontSize:16, fontWeight:800, color:done?color:'#ccc' }}>✓</div>
+            <div style={{ fontSize:7, color:done?color:'#bbb', fontWeight:600, textAlign:'center', padding:'0 4px', marginTop:2 }}>
+              {item.name.split(' ')[0]}
+            </div>
           </div>
         )}
       </div>
-      <div style={{ fontSize:9, fontWeight:done?700:400, color:done?color:'var(--muted)', textAlign:'center', lineHeight:1.2, width:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+      {/* Name below stamp */}
+      <div style={{
+        fontSize:9, fontWeight: done ? 700 : 500,
+        color: done ? 'var(--text)' : 'var(--muted)',
+        textAlign:'center', lineHeight:1.25, width:'100%',
+        overflow:'hidden', display:'-webkit-box',
+        WebkitLineClamp:2, WebkitBoxOrient:'vertical',
+      }}>
         {item.name}
       </div>
     </div>
@@ -163,49 +193,98 @@ function RouteDetail({ route, checks, visitedMun, onToggle, onBack, color }) {
 // ── Cover grid (main passport view) ───────────────────────────────────
 function PassportCover({ routes, getRoutePct, onSelectRoute }) {
   return (
-    <div style={{ padding:'16px 16px 100px' }}>
-      <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'1.5px', color:'var(--muted)', marginBottom:14 }}>
+    <div style={{ padding:'14px 14px 100px' }}>
+      <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'1.5px', color:'var(--muted)', marginBottom:12 }}>
         Seleciona uma rota para explorar
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
         {routes.map(route => {
           const pct = getRoutePct(route)
           const done = pct === 100
+          const total = route.municipalities.length
           return (
             <button key={route.id} onClick={() => onSelectRoute(route)} style={{
-              position:'relative', borderRadius:16, overflow:'hidden',
-              border:`2px solid ${done?route.color:'var(--border)'}`,
-              background:'var(--surface)',
-              cursor:'pointer', padding:0, textAlign:'left',
-              boxShadow: done ? `0 4px 20px ${route.color}40` : '0 2px 8px rgba(0,0,0,.06)',
-              transition:'all .2s',
-              aspectRatio: '3/4',
-              display:'block', width:'100%',
+              position:'relative',
+              borderRadius:14,
+              overflow:'hidden',
+              border: done ? `2px solid ${route.color}` : '2px solid transparent',
+              background: route.color,
+              cursor:'pointer',
+              padding:0,
+              textAlign:'left',
+              boxShadow: done ? `0 6px 24px ${route.color}55` : '0 2px 10px rgba(0,0,0,.12)',
+              transition:'transform .15s, box-shadow .15s',
+              aspectRatio: '2/3',
+              display:'block',
+              width:'100%',
             }}>
-              {/* Cover image — fills entire card */}
+              {/* Cover image — fills entire card, no gaps */}
               {route.cover ? (
-                <img src={route.cover} alt={route.name} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
+                <img
+                  src={route.cover}
+                  alt={route.name}
+                  style={{
+                    position:'absolute', inset:0,
+                    width:'100%', height:'100%',
+                    objectFit:'cover', objectPosition:'center top',
+                    display:'block',
+                  }}
+                />
               ) : (
-                <div style={{ width:'100%', height:'100%', background:`linear-gradient(145deg,${route.color},${route.color}88)`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <span style={{ fontSize:32, fontWeight:900, color:'rgba(255,255,255,.3)' }}>{route.shortName}</span>
+                <div style={{
+                  position:'absolute', inset:0,
+                  background:`linear-gradient(145deg, ${route.color}, ${route.color}88)`,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                }}>
+                  <span style={{ fontSize:36, fontWeight:900, color:'rgba(255,255,255,.25)' }}>{route.shortName}</span>
                 </div>
               )}
-              {/* Gradient overlay */}
-              <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, transparent 35%, rgba(0,0,0,.75))' }}/>
-              {/* Text */}
-              <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'10px 12px' }}>
-                <div style={{ fontSize:13, fontWeight:800, color:'#fff', lineHeight:1.2, marginBottom:3 }}>{route.name}</div>
-                {/* Progress bar */}
-                <div style={{ height:3, background:'rgba(255,255,255,.25)', borderRadius:2, overflow:'hidden', marginBottom:4 }}>
-                  <div style={{ height:'100%', width:`${pct}%`, background: done ? '#fff' : route.color, borderRadius:2, transition:'width .6s' }}/>
+
+              {/* Strong gradient at bottom for text legibility */}
+              <div style={{
+                position:'absolute', inset:0,
+                background:'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.88) 100%)',
+                pointerEvents:'none',
+              }}/>
+
+              {/* Subtle top vignette */}
+              <div style={{
+                position:'absolute', inset:0,
+                background:'linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, transparent 30%)',
+                pointerEvents:'none',
+              }}/>
+
+              {/* Route name + progress at bottom */}
+              <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'0 10px 10px' }}>
+                <div style={{
+                  fontSize:12, fontWeight:800, color:'#fff',
+                  lineHeight:1.25, marginBottom:5,
+                  textShadow:'0 1px 4px rgba(0,0,0,.5)',
+                  letterSpacing:'0.1px',
+                }}>
+                  {route.name}
                 </div>
-                <div style={{ fontSize:10, color:'rgba(255,255,255,.7)', fontWeight:600 }}>
-                  {done ? '✓ Completo' : `${pct}% concluído`}
+                <div style={{ height:3, background:'rgba(255,255,255,.22)', borderRadius:2, overflow:'hidden', marginBottom:4 }}>
+                  <div style={{
+                    height:'100%', width:`${pct}%`,
+                    background: done ? '#fff' : 'rgba(255,255,255,0.85)',
+                    borderRadius:2, transition:'width .6s',
+                  }}/>
+                </div>
+                <div style={{ fontSize:9, color:'rgba(255,255,255,.75)', fontWeight:700, letterSpacing:'0.3px' }}>
+                  {done ? '✓ Rota completa' : pct === 0 ? `${total} paragens` : `${pct}% · ${Math.round(total*pct/100)}/${total}`}
                 </div>
               </div>
-              {/* Done badge */}
+
+              {/* COMPLETO badge */}
               {done && (
-                <div style={{ position:'absolute', top:8, right:8, background:route.color, color:'#fff', borderRadius:20, padding:'3px 8px', fontSize:9, fontWeight:800 }}>COMPLETO</div>
+                <div style={{
+                  position:'absolute', top:8, left:8,
+                  background:'rgba(255,255,255,0.95)', color:route.color,
+                  borderRadius:6, padding:'2px 7px',
+                  fontSize:8, fontWeight:900, letterSpacing:'0.5px',
+                  textTransform:'uppercase',
+                }}>✓ Completo</div>
               )}
             </button>
           )

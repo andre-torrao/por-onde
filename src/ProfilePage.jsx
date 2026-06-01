@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from './auth'
 import { supabase } from './supabase'
-import { ChevronLeft, Camera, Check, Globe, Edit3, Eye, EyeOff, Star, Trash2, Home, User, MapPin, TrendingUp, Lock, Palette, Map, BookOpen } from 'lucide-react'
+import { ChevronLeft, ChevronDown, Camera, Check, Globe, Edit3, Eye, EyeOff, Star, Trash2, Home, User, MapPin, TrendingUp, Lock, Palette, Map, BookOpen } from 'lucide-react'
 import idToNameData from './data/idToName.json'
 import { getSuggestionsForUser } from './storage'
 import PassportTab from './PassportTab'
@@ -186,10 +186,7 @@ function ProfileInfoTab({ user, onEditProfile, color }) {
 
       {/* Color picker */}
       <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:'14px 16px',marginBottom:12}}>
-        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-          <Palette size={15} color={color}/>
-          <span style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>Escolha a sua cor</span>
-        </div>
+        <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',color:'var(--muted)',marginBottom:10}}>Cor do mapa</div>
         <ColorPicker color={color}/>
       </div>
 
@@ -205,21 +202,87 @@ function ProfileInfoTab({ user, onEditProfile, color }) {
 function ColorPicker({ color: currentColor }) {
   const { user, updateProfile } = useAuth()
   const cur = currentColor || user?.markColor || '#6c63ff'
+  const [open, setOpen] = useState(false)
+
+  function pick(hex) {
+    document.documentElement.style.setProperty('--mark-color', hex)
+    updateProfile({ markColor: hex })
+    setOpen(false)
+  }
+
   return (
-    <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-      {MARK_COLORS.map(hex => {
-        const selected = cur===hex
-        return (
-          <button key={hex} onClick={()=>{ document.documentElement.style.setProperty('--mark-color',hex); updateProfile({markColor:hex}) }} style={{
-            width:36,height:36,borderRadius:10,background:hex,border:'none',
-            cursor:'pointer',position:'relative',flexShrink:0,transition:'transform .15s, box-shadow .15s',
-            transform:selected?'scale(1.2)':'scale(1)',
-            boxShadow:selected?`0 0 0 3px white, 0 0 0 5px ${hex}`:`0 2px 6px ${hex}60`,
-          }}>
-            {selected&&<Check size={14} color="#fff" style={{position:'absolute',inset:0,margin:'auto'}}/>}
-          </button>
-        )
-      })}
+    <div>
+      {/* Active color row */}
+      <div
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display:'flex', alignItems:'center', gap:12,
+          padding:'12px 14px', borderRadius:12, cursor:'pointer',
+          background:`${cur}12`, border:`1.5px solid ${cur}40`,
+          transition:'all .2s',
+        }}
+      >
+        {/* Big color swatch */}
+        <div style={{
+          width:40, height:40, borderRadius:10,
+          background:cur, flexShrink:0,
+          boxShadow:`0 3px 10px ${cur}55`,
+          display:'flex', alignItems:'center', justifyContent:'center',
+        }}>
+          <Check size={16} color="#fff" strokeWidth={3}/>
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:2 }}>Cor do mapa</div>
+          <div style={{ fontSize:11, color:'var(--muted)', fontFamily:'monospace', letterSpacing:'0.5px' }}>{cur.toUpperCase()}</div>
+        </div>
+        {/* Chevron */}
+        <div style={{
+          width:28, height:28, borderRadius:8,
+          background:`${cur}20`, display:'flex',
+          alignItems:'center', justifyContent:'center',
+          transition:'transform .2s',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+        }}>
+          <ChevronDown size={15} color={cur}/>
+        </div>
+      </div>
+
+      {/* Expanded palette */}
+      {open && (
+        <div style={{
+          marginTop:10, padding:'12px', borderRadius:12,
+          background:'var(--surface2)', border:'1px solid var(--border)',
+          display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10,
+        }}>
+          {MARK_COLORS.map(hex => {
+            const selected = cur === hex
+            return (
+              <button
+                key={hex}
+                onClick={() => pick(hex)}
+                style={{
+                  width:'100%', aspectRatio:'1',
+                  borderRadius:10, background:hex, border:'none',
+                  cursor:'pointer', position:'relative',
+                  transition:'transform .15s, box-shadow .15s',
+                  transform: selected ? 'scale(1.08)' : 'scale(1)',
+                  boxShadow: selected
+                    ? `0 0 0 3px var(--bg), 0 0 0 5px ${hex}, 0 4px 12px ${hex}60`
+                    : `0 2px 6px ${hex}50`,
+                  outline:'none',
+                }}
+              >
+                {selected && (
+                  <Check
+                    size={14} color="#fff" strokeWidth={3}
+                    style={{ position:'absolute', inset:0, margin:'auto' }}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
