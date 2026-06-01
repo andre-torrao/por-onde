@@ -187,7 +187,7 @@ function CoverCard({ route, pct, onSelect }) {
       style={{
         position:'relative',
         width:'100%',
-        paddingBottom:'148%',   /* aspect ratio 1:1.48 ≈ passport-card shape */
+      paddingBottom:'133%',   /* matches exact image ratio 360×480 */
         borderRadius:14,
         overflow:'hidden',
         cursor:'pointer',

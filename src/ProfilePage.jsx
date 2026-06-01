@@ -81,7 +81,7 @@ function RingChart({ pct, color, size=160 }) {
 }
 
 // ── Explorer tab ──────────────────────────────────────────────────────
-function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
+function ExplorerTab({ visitedMun, visitedPar, idNameMap, color, onNavigate }) {
   const [sub, setSub] = useState('municipalities')
   const munCount=visitedMun.size, parCount=visitedPar.size
   const munPct=Math.round(munCount/TOTAL_MUN*100), parPct=Math.round(parCount/TOTAL_PAR*100)
@@ -149,7 +149,7 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
             </span>
           </div>
           {lastVisited.map(({name,id},i)=>(
-            <div key={id} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 16px',borderBottom:i<lastVisited.length-1?`1px solid ${color}15`:'none',background:i%2===0?`${color}04`:'transparent'}}>
+            <div key={id} onClick={()=>onNavigate?.(id,name)} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 16px',borderBottom:i<lastVisited.length-1?`1px solid ${color}15`:'none',background:i%2===0?`${color}04`:'transparent',cursor:onNavigate?'pointer':'default'}}>
               <div style={{width:26,height:26,borderRadius:8,background:color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 2px 6px ${color}40`}}>
                 <span style={{fontSize:10,fontWeight:800,color:'#fff'}}>{i+1}</span>
               </div>
@@ -570,7 +570,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
         {editing
           ?<EditProfilePanel user={user} onSaved={()=>setEditing(false)} color={color}/>
           :<>
-            {tab==='explorer'    &&<ExplorerTab visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} color={color}/>}
+            {tab==='explorer'    &&<ExplorerTab visitedMun={visitedMun} visitedPar={visitedPar} idNameMap={idNameMap} color={color} onNavigate={onNavigate}/>}
             {tab==='passport'    &&<PassportTab visitedMun={visitedMun} color={color} onStampClick={onStampClick}/>}
             {tab==='favorites'   &&<FavoritesTab user={user} color={color} onNavigate={onNavigate}/>}
             {tab==='suggestions' &&<SubmissionsTab userId={user.id} color={color}/>}
