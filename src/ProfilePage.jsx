@@ -62,18 +62,20 @@ function HexButton({ icon, label, active, color, onClick }) {
 // ── Segmented ring ────────────────────────────────────────────────────
 function RingChart({ pct, color, size=160 }) {
   const segments = 32, filled = Math.round(pct/100*segments)
-  const r = 56, cx = size/2, cy = size/2
-  const gap = 5, segA = (360 - segments*gap)/segments
+  const cx = size/2, cy = size/2
+  const r = size * 0.38          // scales with size: ~57 at 150, ~61 at 160
+  const inner = r - size * 0.15  // inner hole also scales
+  const gap = 4, segA = (360 - segments*gap)/segments
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       {Array.from({length:segments}).map((_,i) => {
         const s=(i*(segA+gap)-90)*Math.PI/180, e=(i*(segA+gap)-90+segA)*Math.PI/180
         const x1=cx+r*Math.cos(s),y1=cy+r*Math.sin(s),x2=cx+r*Math.cos(e),y2=cy+r*Math.sin(e)
         return <path key={i} d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`}
-          fill={i<filled ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.15)'}
-          opacity={i<filled ? (0.4+(i/Math.max(filled,1))*0.6) : 1}/>
+          fill={i<filled ? color : `${color}20`}
+          opacity={i<filled ? (0.5+(i/Math.max(filled,1))*0.5) : 1}/>
       })}
-      <circle cx={cx} cy={cy} r={r-22} fill="rgba(0,0,0,0.2)"/>
+      <circle cx={cx} cy={cy} r={inner} fill="var(--surface)"/>
     </svg>
   )
 }
