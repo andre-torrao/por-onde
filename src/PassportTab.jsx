@@ -272,11 +272,8 @@ function CoverCard({ route, pct, onSelect }) {
 // ── Cover grid ─────────────────────────────────────────────────────────
 function PassportCover({ routes, getRoutePct, onSelectRoute }) {
   return (
-    <div style={{ padding:'14px 14px 100px' }}>
-      <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'1.5px', color:'var(--muted)', marginBottom:12 }}>
-        Seleciona uma rota para explorar
-      </div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+    <div style={{ padding:'0 10px 100px' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:0 }}>
         {routes.map(route => (
           <CoverCard
             key={route.id}
@@ -356,7 +353,7 @@ export default function PassportTab({ visitedMun, color }) {
 
   return (
     <div style={{ flex:1, overflowY:'auto' }}>
-      <div style={{ background:'linear-gradient(145deg,#1C244F,#2D3D6E)', padding:'18px 16px 16px', position:'relative', overflow:'hidden' }}>
+      <div style={{ background:'linear-gradient(145deg,#1C244F,#2D3D6E)', padding:'18px 16px 14px', position:'relative', overflow:'hidden' }}>
         <div style={{ position:'absolute', right:-20, top:-20, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,.05)' }}/>
         <div style={{ position:'relative' }}>
           <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'2.5px', color:'rgba(255,255,255,.45)', marginBottom:3 }}>Passaporte de Viagem · Portugal</div>

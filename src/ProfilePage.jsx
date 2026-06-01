@@ -122,8 +122,8 @@ function ExplorerTab({ visitedMun, visitedPar, idNameMap, color }) {
           <div style={{position:'relative',width:150,height:150,flexShrink:0}}>
             <RingChart pct={pct} color={isMun?'#6c63ff':'#4ea8de'} size={150}/>
             <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-              <div style={{fontSize:32,fontWeight:900,color:isMun?'#6c63ff':'#4ea8de',lineHeight:1}}>{pct}%</div>
-              <div style={{fontSize:10,color:'var(--muted)',marginTop:3}}>de {total}</div>
+              <div style={{fontSize:24,fontWeight:900,color:isMun?'#6c63ff':'#4ea8de',lineHeight:1}}>{pct}%</div>
+              <div style={{fontSize:9,color:'var(--muted)',marginTop:2}}>de {total}</div>
             </div>
           </div>
           <div style={{flex:1}}>
@@ -326,7 +326,7 @@ function FavoritesTab({ user, color, onNavigate }) {
             cursor: onNavigate ? 'pointer' : 'default',
             transition:'background .15s, border-color .15s',
           }}
-            onClick={() => onNavigate?.(slug, f.name)}
+            onClick={() => onNavigate?.(f.id, f.name)}
           >
             <div style={{width:42,height:42,borderRadius:12,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <Star size={18} fill={color} color={color}/>

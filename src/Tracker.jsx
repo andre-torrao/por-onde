@@ -53,22 +53,30 @@ export default function Tracker() {
     }
   }, [user?.id])
 
-  // Called from PassportTab when user clicks a stamp — shows InfoCard
-  const handleStampClick = useCallback((slug, name) => {
-    // Robust matching — try multiple ID formats
-    const s = slug.toLowerCase().replace(/-/g, '')
+  // Called from PassportTab/FavoritesTab — shows InfoCard for a location
+  const handleStampClick = useCallback((slugOrId, name) => {
     let found = null
 
-    for (const [id, val] of idNameMap.entries()) {
-      const raw = id.split('__')[0].toLowerCase().replace(/-/g, '')
-      if (raw === s) {
-        const displayName = typeof val === 'string' ? val : val?.displayName || val?.name || name
-        found = { id, name: displayName, concelho: typeof val === 'object' ? val.concelho || '' : '' }
-        break
+    // 1. Try exact ID match first (favorites pass the full map ID)
+    if (idNameMap.has(slugOrId)) {
+      const val = idNameMap.get(slugOrId)
+      const displayName = typeof val === 'string' ? val : val?.displayName || val?.name || name
+      found = { id: slugOrId, name: displayName, concelho: typeof val === 'object' ? val.concelho || '' : '' }
+    }
+
+    // 2. Fall back to slug matching (passport stamps pass a slug)
+    if (!found) {
+      const s = slugOrId.toLowerCase().replace(/-/g, '')
+      for (const [id, val] of idNameMap.entries()) {
+        const raw = id.split('__')[0].toLowerCase().replace(/-/g, '')
+        if (raw === s) {
+          const displayName = typeof val === 'string' ? val : val?.displayName || val?.name || name
+          found = { id, name: displayName, concelho: typeof val === 'object' ? val.concelho || '' : '' }
+          break
+        }
       }
     }
 
-    // Close profile first, then show card after render
     setProfile(false)
     setTimeout(() => {
       if (found) {
