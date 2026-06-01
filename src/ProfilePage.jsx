@@ -461,7 +461,7 @@ export default function ProfilePage({ visitedMun, visitedPar, idNameMap, level, 
             </div>
           </div>
 
-          {/* Hexagon navigation tabs */}n tabs */}
+          {/* Hexagon navigation tabs */}
           <div style={{display:'flex',justifyContent:'space-around',padding:'4px 8px 20px',position:'relative'}}>
             {TABS.map(t=>(
               <HexButton key={t.key} icon={t.icon} label={t.label} active={tab===t.key} color="rgba(255,255,255,.35)" onClick={()=>setTab(t.key)}/>
