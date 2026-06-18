@@ -207,6 +207,7 @@ export const ROUTES = [
     subtitle: 'GR60 · 275 km · 14 etapas · Circular',
     description: 'A GR60 é um percurso pedestre circular de 275 km que atravessa os maciços da Gralheira e do Montemuro, entre os rios Douro e Vouga. Cruza 7 municípios, 4 Zonas da Rede Natura 2000 e o Arouca Geopark Mundial da UNESCO.',
     color: '#2D6A3F',
+    cover: '/stamps/cover_mm.png',
     mapCenter: [40.93, -8.25],
     mapZoom: 9,
     municipalities: [
